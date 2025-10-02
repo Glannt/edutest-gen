@@ -26,25 +26,23 @@ public class QuestionDto extends BaseDto {
 
     private String imageUrl;
 
-    @Builder.Default
-    private Double points = 1.0;
 
     @NotNull(message = "Lesson ID is required")
-    private UUID lessonId;
+    private Long lessonId;
 
     @NotNull(message = "Difficulty ID is required")
-    private UUID difficultyId;
+    private Long levelId;
 
     @NotNull(message = "Question type ID is required")
-    private UUID questionTypeId;
+    private Long questionTypeId;
 
-    private List<Option> options;
+    private List<OptionDto> options;
 
     // Additional fields for display
-    private String lessonName;
-    private String difficultyName;
-    private String questionTypeName;
-    private String subjectName;
-    private String gradeName;
-    private String chapterName;
+//    private String lessonName;
+//    private String difficultyName;
+//    private String questionTypeName;
+//    private String subjectName;
+//    private String gradeName;
+//    private String chapterName;
 }

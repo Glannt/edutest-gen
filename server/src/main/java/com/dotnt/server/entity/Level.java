@@ -23,8 +23,8 @@ public class Level extends BaseEntity {
 
     private String description;
 
-    @Column(name = "points", precision = 5, scale = 2)
-    private BigDecimal points;
+    @Column(name = "points")
+    private Double points;
 
     @OneToMany(mappedBy = "level", cascade = CascadeType.ALL)
     @Builder.Default

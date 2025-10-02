@@ -32,8 +32,8 @@ public class ExamQuestion {
     @JoinColumn(name = "question_id")
     private Question question;
 
-    @Column(name = "final_points", precision = 5, scale = 2)
-    private BigDecimal finalPoints;
+    @Column(name = "final_points")
+    private Double finalPoints;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

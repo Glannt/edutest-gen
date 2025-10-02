@@ -40,9 +40,6 @@ public class Question extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
-    @Column(nullable = false, precision = 5, scale = 2)
-    @Builder.Default
-    private BigDecimal points = BigDecimal.ONE;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

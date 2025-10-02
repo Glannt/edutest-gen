@@ -20,5 +20,5 @@ public class LevelDto extends BaseDto {
 
     private String description;
 
-    private BigDecimal points;
+    private Double points;
 }

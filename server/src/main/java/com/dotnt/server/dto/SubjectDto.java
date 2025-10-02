@@ -1,5 +1,6 @@
 package com.dotnt.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,5 +19,8 @@ public class SubjectDto extends BaseDto {
     private String name;
 
     private String description;
+
+    @JsonProperty("user_id")
+    private Long userId;
 
 }
