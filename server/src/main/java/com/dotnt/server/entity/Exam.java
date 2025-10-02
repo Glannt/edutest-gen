@@ -1,36 +1,48 @@
 package com.dotnt.server.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import com.dotnt.server.enums.ExamStatus;
 import jakarta.persistence.*;
-        import java.util.Set;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "exam")
-@Data
-@Builder
+@Table(name = "exams")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Exam {
+@SuperBuilder
+public class Exam extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "matrix_id", nullable = false)
+    private Matrix matrix;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String code;
 
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String code;
+    @Builder.Default
+    private ExamStatus status = ExamStatus.DRAFT;
 
-    private Integer duration; // in minutes
 
-    @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Matrix> matrices;
 
-    @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<ExamQuestion> examQuestions;
+    @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<ExamQuestion> examQuestions = new HashSet<>();
+
 }

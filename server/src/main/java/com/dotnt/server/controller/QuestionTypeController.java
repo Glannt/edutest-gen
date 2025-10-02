@@ -1,0 +1,66 @@
+package com.dotnt.server.controller;
+
+import com.dotnt.server.annotation.RestResponse;
+import com.dotnt.server.dto.QuestionTypeDto;
+import com.dotnt.server.service.QuestionTypeService;
+import io.swagger.v3.oas.annotations.Operation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.List;
+
+@RestController
+@RequestMapping("/question-types")
+@RestResponse
+@RequiredArgsConstructor
+public class QuestionTypeController {
+    private final QuestionTypeService questionTypeService;
+
+    @GetMapping
+    @Operation(summary = "Get all question types")
+    public List<QuestionTypeDto> getAllQuestionTypes() {
+        return questionTypeService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get question type by ID")
+    public QuestionTypeDto getQuestionTypeById(@PathVariable Long id) {
+        return questionTypeService.findById(id)
+                .orElseThrow(() -> new RuntimeException("QuestionType not found with id " + id));
+    }
+
+    @PostMapping
+    @Operation(summary = "Create new question type")
+    @ResponseStatus(HttpStatus.CREATED)
+    public QuestionTypeDto createQuestionType(@RequestBody QuestionTypeDto dto) {
+        QuestionTypeDto saved = questionTypeService.save(dto);
+
+        // Optionally set Location header
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+        // Nếu muốn sử dụng header, có thể return ResponseEntity:
+        // return ResponseEntity.created(location).body(saved);
+
+        return saved;
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update question type")
+    public QuestionTypeDto updateQuestionType(@PathVariable Long id, @RequestBody QuestionTypeDto dto) {
+        return questionTypeService.update(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete question type")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public String deleteQuestionType(@PathVariable Long id) {
+        questionTypeService.deleteById(id);
+        return "QuestionType deleted successfully";
+    }
+}

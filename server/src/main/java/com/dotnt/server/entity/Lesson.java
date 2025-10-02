@@ -1,50 +1,44 @@
 package com.dotnt.server.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "lesson")
-@Data
-@Builder
+@Table(name = "lessons")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Lesson {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String title;
-
-    @Lob
-    private String description;
+@SuperBuilder
+public class Lesson extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "grade_id")
-    private Grade grade;
+    @JoinColumn(name = "chapter_id", nullable = false)
+    private Chapter chapter;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private String name;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Question> questions;
+    @Column(name = "order_index", nullable = false)
+    @Builder.Default
+    private Integer orderIndex = 0;
 
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<MatrixLesson> matrixLessons;
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonManagedReference
+    private Set<LessonGrade> lessonGrades = new HashSet<>();
+
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonManagedReference
+    private Set<Question> questions = new HashSet<>();
 }
 

@@ -1,39 +1,32 @@
 package com.dotnt.server.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "question_type")
-@Data
-@Builder
+@Table(name = "question_types")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class QuestionType {
+@SuperBuilder
+public class QuestionType extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(nullable = false, length = 100)
     private String name;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @OneToMany(mappedBy = "questionType", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Question> questions;
+    @Builder.Default
+    @JsonManagedReference
+    private Set<Question> questions =new HashSet<>();
+
 }

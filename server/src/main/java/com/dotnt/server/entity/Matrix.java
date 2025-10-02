@@ -1,48 +1,49 @@
 package com.dotnt.server.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "matrix")
-@Data
-@Builder
+@Table(name = "matrices")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Matrix {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String title;
-
-    @Column(name = "total_questions")
-    private Integer totalQuestions;
-
-    @Column(name = "total_points", precision = 5, scale = 2)
-    private BigDecimal totalPoints;
+@SuperBuilder
+public class Matrix extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id")
-    private Teacher teacher;
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
+    private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "exam_id")
-    private Exam exam;
+    @Column(nullable = false)
+    private String name;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
-    @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<MatrixLesson> matrixLessons;
+    @Column(name = "total_questions", nullable = false)
+    @Builder.Default
+    private Integer totalQuestions = 0;
+
+    @Column(name = "duration_minutes", nullable = false)
+    @Builder.Default
+    private Integer durationMinutes = 60;
+
+    @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @Builder.Default
+    private Set<ExamMatrixDetail> examMatrixDetails = new HashSet<>();
+
+    @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @Builder.Default
+    private Set<Exam> exams = new HashSet<>();
 }

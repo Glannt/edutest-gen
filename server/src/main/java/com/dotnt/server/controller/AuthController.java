@@ -1,67 +1,110 @@
-//package com.dotnt.server.controller;
-//
-//import com.dotnt.server.dto.request.LoginRequest;
-//import com.dotnt.server.dto.request.RegisterRequest;
-//import com.dotnt.server.dto.response.ApiResponse;
-//import com.dotnt.server.dto.response.JwtResponse;
-//import io.swagger.v3.oas.annotations.Operation;
-//import io.swagger.v3.oas.annotations.tags.Tag;
-//import jakarta.validation.Valid;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.*;
-//
-//@RestController
-//@RequestMapping("/auth")
-//@Tag(name = "Authentication", description = "APIs for user authentication")
-//@Slf4j
-//public class AuthController extends BaseController {
-//
-//    private final AuthService authService;
-//
-//    public AuthController(AuthService authService) {
-//        this.authService = authService;
-//    }
-//
-//    @PostMapping("/login")
-//    @Operation(summary = "User login")
-//    public ResponseEntity<ApiResponse<JwtResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
-//        log.debug("REST request to authenticate user: {}", loginRequest.getUsername());
-//
-//        try {
-//            JwtResponse jwtResponse = authService.authenticateUser(loginRequest);
-//            return success("Login successful", jwtResponse);
-//        } catch (Exception e) {
-//            log.error("Authentication failed for user: {}", loginRequest.getUsername(), e);
-//            return error("Invalid username or password");
-//        }
-//    }
-//
-//    @PostMapping("/register")
-//    @Operation(summary = "User registration")
-//    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequest registerRequest) {
-//        log.debug("REST request to register user: {}", registerRequest.getUsername());
-//
-//        try {
-//            authService.registerUser(registerRequest);
-//            return success("User registered successfully", "Please login to continue");
-//        } catch (Exception e) {
-//            log.error("Registration failed for user: {}", registerRequest.getUsername(), e);
-//            return error(e.getMessage());
-//        }
-//    }
-//
-//    @PostMapping("/refresh")
-//    @Operation(summary = "Refresh JWT token")
-//    public ResponseEntity<ApiResponse<JwtResponse>> refreshToken(@RequestParam String refreshToken) {
-//        log.debug("REST request to refresh token");
-//
-//        try {
-//            JwtResponse jwtResponse = authService.refreshToken(refreshToken);
-//            return success("Token refreshed successfully", jwtResponse);
-//        } catch (Exception e) {
-//            log.error("Token refresh failed", e);
-//            return error("Invalid refresh token");
-//        }
-//    }
-//}
+package com.dotnt.server.controller;
+
+import com.dotnt.server.annotation.RestResponse;
+import com.dotnt.server.config.JwtTokenProvider;
+import com.dotnt.server.dto.request.LoginRequest;
+import com.dotnt.server.dto.request.RegisterRequest;
+import com.dotnt.server.dto.response.LoginResponse;
+import com.dotnt.server.entity.CustomUserDetails;
+import com.dotnt.server.entity.User;
+import com.dotnt.server.service.UserService;
+import com.dotnt.server.service.impl.CustomUserDetailsServiceImpl;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RestResponse
+@RequestMapping("/auth")
+public class AuthController {
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserService userService;
+
+    public AuthController(AuthenticationManager authenticationManager,
+                          JwtTokenProvider jwtTokenProvider,
+                          UserService userService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.userService = userService;
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
+        // Authenticate user
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Generate JWT
+        String token = jwtTokenProvider.generateToken(authentication);
+
+        // Get user info
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        return LoginResponse.builder()
+                .token(token)
+                .username(userDetails.getUsername())
+                .role(userDetails.getRole())
+                .build();
+    }
+
+    // GET /api/auth/me
+    @GetMapping("/me")
+    public LoginResponse getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            return null;
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return LoginResponse.builder()
+                .token(null)
+                .username(userDetails.getUsername())
+                .role(userDetails.getRole())
+                .build();
+    }
+
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public LoginResponse registerUser(
+            @RequestBody RegisterRequest registerRequest) {
+        // 1. Thêm user mới
+        User newUser = userService.register(registerRequest);
+
+        // Chuyển User thành CustomUserDetails
+        CustomUserDetails userDetails = new CustomUserDetails(newUser);
+
+        // 2. Tự động authenticate user mới
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        registerRequest.getUsername(),
+                        registerRequest.getPassword()
+                )
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // 3. Tạo token JWT
+        String token = jwtTokenProvider.generateToken(authentication);
+
+        // 4. Trả về token và thông tin user
+        return  LoginResponse.builder()
+                .token(token)
+                .username(userDetails.getUsername())
+                .role(userDetails.getRole())
+                .build();
+    }
+}

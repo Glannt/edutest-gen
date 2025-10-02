@@ -1,42 +1,34 @@
 package com.dotnt.server.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "subject")
-@Data
-@Builder
+@Table(name = "subjects")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Subject {
+@SuperBuilder
+public class Subject extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
+    private User user;
 
     @Column(nullable = false)
     private String name;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Grade> grades;
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Chapter> chapters = new HashSet<>();
 }

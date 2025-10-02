@@ -1,5 +1,6 @@
 package com.dotnt.server.dto.request;
 
+import com.dotnt.server.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
@@ -17,4 +18,7 @@ public class RegisterRequest {
     private String password;
 
     private String fullName;
+
+    @Builder.Default
+    private UserRole role = UserRole.TEACHER;
 }

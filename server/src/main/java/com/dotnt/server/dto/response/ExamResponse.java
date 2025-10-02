@@ -1,5 +1,6 @@
 package com.dotnt.server.dto.response;
 
+import com.dotnt.server.dto.LevelDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,7 @@ public class ExamResponse {
     private SubjectResponse subject;
     private GradeResponse grade;
     private LessonResponse lesson;
-    private DifficultyResponse difficulty;
+    private LevelDto difficulty;
     private List<QuestionResponse> questions;
     private Integer totalQuestions;
     private LocalDateTime createdAt;

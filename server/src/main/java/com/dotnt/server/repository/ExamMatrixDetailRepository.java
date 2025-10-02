@@ -1,11 +1,9 @@
 package com.dotnt.server.repository;
 
-import com.dotnt.server.entity.MatrixLesson;
+import com.dotnt.server.entity.ExamMatrixDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
-
 @Repository
-public interface MatrixLessonRepository extends JpaRepository<MatrixLesson, UUID> {
+public interface ExamMatrixDetailRepository extends JpaRepository<ExamMatrixDetail, Long> {
 }

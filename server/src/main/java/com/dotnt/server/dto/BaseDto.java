@@ -1,19 +1,18 @@
 package com.dotnt.server.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 public abstract class BaseDto {
-    private UUID id;
+    private Long id;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

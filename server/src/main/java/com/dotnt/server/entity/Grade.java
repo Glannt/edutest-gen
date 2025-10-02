@@ -1,43 +1,33 @@
 package com.dotnt.server.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "grade")
-@Data
-@Builder
+@Table(name = "grades")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Grade {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Builder
+public class Grade extends BaseEntity {
 
     @Column(nullable = false, length = 100)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id")
-    private Subject subject;
+    @Column(name = "level")
+    private Integer level;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "grade", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Lesson> lessons;
+    @OneToMany(mappedBy = "grade", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<LessonGrade> lessonGrades = new HashSet<>();
 }

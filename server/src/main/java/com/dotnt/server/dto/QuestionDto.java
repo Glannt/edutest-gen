@@ -1,18 +1,20 @@
 package com.dotnt.server.dto;
 
-import lombok.*;
+import com.dotnt.server.entity.Option;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 import java.util.UUID;
 
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class QuestionDto extends BaseDto {
 
     @NotBlank(message = "Question content is required")
@@ -24,6 +26,7 @@ public class QuestionDto extends BaseDto {
 
     private String imageUrl;
 
+    @Builder.Default
     private Double points = 1.0;
 
     @NotNull(message = "Lesson ID is required")
@@ -35,7 +38,7 @@ public class QuestionDto extends BaseDto {
     @NotNull(message = "Question type ID is required")
     private UUID questionTypeId;
 
-    private List<QuestionOptionDto> options;
+    private List<Option> options;
 
     // Additional fields for display
     private String lessonName;

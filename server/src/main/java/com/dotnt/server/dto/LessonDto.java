@@ -1,14 +1,19 @@
 package com.dotnt.server.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-@Data
+import java.util.List;
+
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class LessonDto extends BaseDto {
 
     @NotBlank(message = "Lesson name is required")
@@ -16,12 +21,10 @@ public class LessonDto extends BaseDto {
 
     private String description;
 
-    private Integer order;
+    private Integer orderIndex;
 
-    @NotNull(message = "Chapter ID is required")
     private Long chapterId;
 
-    private String chapterName;
-    private String subjectName;
-    private String gradeName;
+    private List<Long> gradeIds;
+
 }

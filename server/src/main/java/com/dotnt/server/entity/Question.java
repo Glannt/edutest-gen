@@ -1,57 +1,56 @@
 package com.dotnt.server.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "question")
-@Data
-@Builder
+@Table(name = "questions")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Question {
+@SuperBuilder
+public class Question extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Lob
-    @Column(nullable = false)
-    private String text;
-
-    private String questionImage;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lesson_id")
+    @JoinColumn(name = "lesson_id", nullable = false)
+    @JsonBackReference
     private Lesson lesson;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "level_id")
+    @JoinColumn(name = "level_id", nullable = false)
+    @JsonBackReference
     private Level level;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_type_id")
+    @JoinColumn(name = "question_type_id", nullable = false)
     private QuestionType questionType;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(columnDefinition = "TEXT")
+    private String explanation;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Option> options;
+    @Column(nullable = false, precision = 5, scale = 2)
+    @Builder.Default
+    private BigDecimal points = BigDecimal.ONE;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<ExamQuestion> examQuestions;
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonManagedReference
+    private Set<Option> options = new HashSet<>();
+
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonManagedReference
+    private Set<ExamQuestion> examQuestions = new HashSet<>();
 }

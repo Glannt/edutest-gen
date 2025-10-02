@@ -13,8 +13,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
-        use_sql_comments: true
+#        format_sql: true
+#        use_sql_comments: true
 
   devtools:
     restart:
@@ -46,19 +46,19 @@ server:
     include-message: always
 
 # Logging Configuration
-logging:
-  level:
-    com.examassistant: ${LOG_LEVEL:INFO}
-    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
-    org.springframework.web: ${WEB_LOG_LEVEL:INFO}
-  pattern:
-    console: "%clr(%d{ISO8601}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+#logging:
+#  level:
+#    com.examassistant: ${LOG_LEVEL:INFO}
+#    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+#    org.springframework.web: ${WEB_LOG_LEVEL:INFO}
+#  pattern:
+#    console: "%clr(%d{ISO8601}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
 
 
 # JWT Configuration
 app:
   jwt:
-    secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
+    secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890ThanhDo200904bb1jrunfdl}
     expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
 
@@ -69,32 +69,32 @@ app:
     allowed-headers: ${CORS_HEADERS:*}
 
   # License Configuration
-  license:
-    max-usage-per-key: ${LICENSE_MAX_USAGE:1000}
-    default-expiry-days: ${LICENSE_EXPIRY_DAYS:365}
+#  license:
+#    max-usage-per-key: ${LICENSE_MAX_USAGE:1000}
+#    default-expiry-days: ${LICENSE_EXPIRY_DAYS:365}
 
   # AI Integration (Future)
-  ai:
-    enabled: ${AI_ENABLED:false}
-    api-url: ${AI_API_URL:https://api.example.com}
-    api-key: ${AI_API_KEY:}
-    timeout: ${AI_TIMEOUT:30000}
+#  ai:
+#    enabled: ${AI_ENABLED:false}
+#    api-url: ${AI_API_URL:https://api.example.com}
+#    api-key: ${AI_API_KEY:}
+#    timeout: ${AI_TIMEOUT:30000}
 
 # OpenAPI Documentation
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html
+#    path: /swagger-ui.html
     operationsSorter: method
     tagsSorter: alpha
 
 # Management Endpoints
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: when_authorized
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health,info,metrics
+#  endpoint:
+#    health:
+#      show-details: when_authorized

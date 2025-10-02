@@ -1,22 +1,24 @@
 package com.dotnt.server.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
-import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class GradeDto extends BaseDto {
-
-    @NotBlank(message = "Grade name is required")
     private String name;
 
     private Integer level;
 
-    private List<UUID> subjectIds;
+    private String description;
+
+    private List<Long> lessonIds;
 }

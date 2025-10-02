@@ -1,6 +1,7 @@
 package com.dotnt.server.dto;
 
 import com.dotnt.server.enums.UserRole;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -21,9 +22,11 @@ public class UserDto extends BaseDto {
 
     private String fullName;
 
-    private UserRole role = UserRole.USER;
+    @Builder.Default
+    private UserRole role = UserRole.TEACHER;
 
+    @Builder.Default
     private Boolean isActive = true;
 
-    private LicenseDto license;
+//    private LicenseDto license;
 }

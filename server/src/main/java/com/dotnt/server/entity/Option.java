@@ -1,43 +1,33 @@
 package com.dotnt.server.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "option")
-@Data
-@Builder
+@Table(name = "options")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Option {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Lob
-    @Column(nullable = false)
-    private String text;
-
-    @Column(name = "is_correct")
-    private Boolean isCorrect;
+@Builder
+public class Option extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_id")
+    @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(columnDefinition = "TEXT")
+    private String content;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "is_correct", nullable = false)
+    @Builder.Default
+    private Boolean isCorrect = false;
+
+    @Column(name = "order_index", nullable = false)
+    @Builder.Default
+    private Integer orderIndex = 0;
 }
