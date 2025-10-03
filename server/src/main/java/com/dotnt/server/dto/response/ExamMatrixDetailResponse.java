@@ -1,23 +1,22 @@
 package com.dotnt.server.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.dotnt.server.dto.BaseDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ExamMatrixDetailResponse {
-    private Long id;
-    private Long examId;
-    private Long matrixId;
-    private Long questionTypeId;
+@SuperBuilder
+public class ExamMatrixDetailResponse extends BaseDto {
+    @JsonProperty("level")
+    private String levelName;
+    @JsonProperty("matrix_name")
+    private String matrixName;
     private Integer quantity;
-    private Double score;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Double percent;
+
 }
