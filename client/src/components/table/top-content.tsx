@@ -9,7 +9,7 @@ import {
   Selection,
 } from '@heroui/react';
 
-import { ChevronDownIcon, PlusIcon, SearchIcon } from '../icons';
+import { ChevronDownIcon, SearchIcon } from '../icons';
 
 import { StatusOptions } from '@/interface/status-option.interface';
 
@@ -25,6 +25,7 @@ interface Props {
   statusOptions: StatusOptions[];
   columns: { name: string; uid: string }[];
   total: number;
+  extraActions?: React.ReactNode;
 }
 
 export const TopContent: React.FC<Props> = ({
@@ -39,6 +40,7 @@ export const TopContent: React.FC<Props> = ({
   statusOptions,
   columns,
   total,
+  extraActions,
 }) => {
   return (
     <div className='flex flex-col gap-4'>
@@ -105,12 +107,17 @@ export const TopContent: React.FC<Props> = ({
               ))}
             </DropdownMenu>
           </Dropdown>
-          <Button
+          {/* <Button
             color='primary'
             endContent={<PlusIcon />}
+            variant='solid'
+            onPress={() => {
+              alert('Thêm mới');
+            }}
           >
-            Add New
-          </Button>
+            Thêm mới
+          </Button> */}
+          {extraActions}
         </div>
       </div>
       <div className='flex justify-between items-center'>

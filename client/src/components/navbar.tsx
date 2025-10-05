@@ -11,19 +11,12 @@ import {
   NavbarMenu,
   NavbarMenuItem,
 } from '@heroui/navbar';
-import { link as linkStyles, menuItem } from '@heroui/theme';
-import clsx from 'clsx';
+import { useDisclosure } from '@heroui/modal';
 
 import { siteConfig } from '@/config/site';
 import { ThemeSwitch } from '@/components/theme-switch';
-import {
-  TwitterIcon,
-  GithubIcon,
-  DiscordIcon,
-  SearchIcon,
-} from '@/components/icons';
+import { GithubIcon, SearchIcon } from '@/components/icons';
 import { Logo } from '@/components/icons';
-import { useDisclosure } from '@heroui/modal';
 import LoginModal from '@/components/login/login-modal.component';
 
 export const Navbar = () => {
@@ -55,9 +48,9 @@ export const Navbar = () => {
 
   return (
     <HeroUINavbar
+      height='5rem'
       maxWidth='xl'
       position='sticky'
-      height='5rem'
     >
       <NavbarContent
         className='basis-1/5 sm:basis-full'
@@ -88,8 +81,8 @@ export const Navbar = () => {
             //   siteConfig.navMenuItems.find((item) => item.label === 'Login')
             //     ?.href
             // }
-            onPress={onOpen}
             variant='ghost'
+            onPress={onOpen}
           >
             Đăng nhập
           </Button>

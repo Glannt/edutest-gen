@@ -10,7 +10,6 @@ import {
   Selection,
 } from '@heroui/react';
 
-import { TopContent } from './top-content';
 import { BottomContent } from './bottom-content';
 
 import { useTableData } from '@/hooks/useTableData';
@@ -60,6 +59,7 @@ export function GenericTable<T extends { id: string }>({
   setRowsPerPage,
   setSelectedKeys,
   setSortDescriptor,
+  topContent,
   renderCell,
 }: GenericTableProps<T>) {
   const { headerColumns, sortedItems, pages, filteredItems } = useTableData({
@@ -75,30 +75,30 @@ export function GenericTable<T extends { id: string }>({
     sortDescriptor,
   });
 
-  const topContent = (
-    <TopContent
-      columns={columns}
-      filterValue={filterValue}
-      statusFilter={statusFilter}
-      statusOptions={statusOptions}
-      total={data.length}
-      visibleColumns={visibleColumns}
-      onClear={() => {
-        setFilterValue('');
-        setPage(1);
-      }}
-      onColumnsChange={setVisibleColumns}
-      onRowsPerPageChange={(e) => {
-        setRowsPerPage(Number(e.target.value));
-        setPage(1);
-      }}
-      onSearchChange={(v?: string) => {
-        setFilterValue(v || '');
-        setPage(1);
-      }}
-      onStatusChange={setStatusFilter}
-    />
-  );
+  // const topContent = (
+  //   <TopContent
+  //     columns={columns}
+  //     filterValue={filterValue}
+  //     statusFilter={statusFilter}
+  //     statusOptions={statusOptions}
+  //     total={data.length}
+  //     visibleColumns={visibleColumns}
+  //     onClear={() => {
+  //       setFilterValue('');
+  //       setPage(1);
+  //     }}
+  //     onColumnsChange={setVisibleColumns}
+  //     onRowsPerPageChange={(e) => {
+  //       setRowsPerPage(Number(e.target.value));
+  //       setPage(1);
+  //     }}
+  //     onSearchChange={(v?: string) => {
+  //       setFilterValue(v || '');
+  //       setPage(1);
+  //     }}
+  //     onStatusChange={setStatusFilter}
+  //   />
+  // );
 
   const bottomContent = (
     <BottomContent

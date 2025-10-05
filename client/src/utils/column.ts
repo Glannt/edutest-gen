@@ -15,3 +15,19 @@ export const subjectColumns: Column[] = [
   //   { name: 'LESSONS', uid: 'lessons' },
   { name: 'ACTIONS', uid: 'actions' }, // thêm nếu bạn muốn có cột thao tác
 ];
+
+export const INITIAL_VISIBLE_LEVEL_COLUMNS = [
+  'name',
+  'description',
+  'points',
+  'actions',
+];
+
+export const levelColumns: Column[] = [
+  { uid: 'name', name: 'Tên cấp độ', sortable: true },
+  { uid: 'description', name: 'Mô tả' },
+  { uid: 'points', name: 'Điểm', sortable: true },
+  { uid: 'created_at', name: 'Ngày tạo', sortable: true },
+  { uid: 'updated_at', name: 'Cập nhật', sortable: true },
+  { uid: 'actions', name: 'Hành động' },
+];

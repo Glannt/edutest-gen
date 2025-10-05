@@ -4,21 +4,21 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerBody,
+  DrawerFooter,
 } from '@heroui/drawer';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Button } from '@heroui/button';
 
-import { ChevronRightIcon } from '@/components/icons';
+import { ThemeSwitch } from '@/components/theme-switch';
 
 // Define navigation items
 const navItems = [
-  { name: 'Dashboard', path: '/', icon: 'lucide:layout-dashboard' },
-  { name: 'Độ khó', path: '/level', icon: 'lucide:user' },
+  { name: 'Dashboard', path: '/dashboard', icon: 'lucide:layout-dashboard' },
+  { name: 'Độ khó', path: '/dashboard/level', icon: 'lucide:user' },
   { name: 'Môn học', path: '/dashboard/subject', icon: 'lucide:user' },
   { name: 'Loại câu hỏi', path: '/question-type', icon: 'lucide:user' },
   { name: 'Lớp', path: '/grade', icon: 'lucide:user' },
   { name: 'Bài học', path: '/lesson', icon: 'lucide:user' },
-  { name: 'Ma trận', path: '/matrix', icon: 'lucide:user' },
+  { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:user' },
   { name: 'Câu hỏi', path: '/question', icon: 'lucide:user' },
   { name: 'Bài thi', path: '/exam', icon: 'lucide:user' },
   { name: 'Settings', path: '/settings', icon: 'lucide:settings' },
@@ -67,17 +67,12 @@ export default function SidebarLayout() {
         </Button>
       )} */}
       {!isOpen && (
-        <Button
-          isIconOnly
-          aria-label='Toggle Sidebar'
-          className='fixed top-4 left-4 z-50'
-          variant='light'
+        <aside
+          className='fixed top-0 left-0 h-full z-50 flex items-center'
           onMouseEnter={toggleSidebar}
-
-          // onPress={toggleSidebar}
         >
-          <ChevronRightIcon className='text-xl' />
-        </Button>
+          <div className='h-full w-9 bg-content1 shadow-md rounded-r-sm border-r border-divider m-2 cursor-pointer hover:w-6 transition-all duration-200' />
+        </aside>
       )}
       {/* Sidebar using Drawer */}
       <Drawer
@@ -123,6 +118,7 @@ export default function SidebarLayout() {
                             : 'text-foreground-600 hover:bg-content2'
                         }`
                       }
+                      end={item.path === '/dashboard'}
                       to={item.path}
                       onClick={isMobile ? onClose : undefined}
                     >
@@ -135,6 +131,11 @@ export default function SidebarLayout() {
                   ))}
                 </nav>
               </DrawerBody>
+              <DrawerFooter className='h-24'>
+                <div className='w-full border-t border-divider py-3'>
+                  <ThemeSwitch />
+                </div>
+              </DrawerFooter>
             </>
           )}
         </DrawerContent>

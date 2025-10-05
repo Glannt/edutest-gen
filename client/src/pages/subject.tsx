@@ -1,4 +1,4 @@
-import SubjectTable from '@/components/dashboard/subject-table';
+import SubjectTable from '@/components/subject/subject-table';
 
 export default function SubjectPage() {
   return (

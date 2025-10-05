@@ -7,6 +7,8 @@ import BlogPage from '@/pages/blog';
 import AboutPage from '@/pages/about';
 import SidebarLayout from '@/layouts/sidebar-layout';
 import SubjectPage from '@/pages/subject';
+import LevelPage from '@/pages/level';
+import MatrixPage from '@/pages/matrix';
 
 function App() {
   return (
@@ -27,11 +29,19 @@ function App() {
           element={<SubjectPage />}
           path='subject'
         />
+        <Route
+          element={<LevelPage />}
+          path='level'
+        />
+        <Route
+          element={<MatrixPage />}
+          path='matrix'
+        />
       </Route>
 
       <Route
         element={<PricingPage />}
-        path='/pricing'
+        path='/level'
       />
       <Route
         element={<BlogPage />}
