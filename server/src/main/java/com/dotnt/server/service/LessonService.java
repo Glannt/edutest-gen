@@ -10,5 +10,4 @@ public interface LessonService {
     LessonResponse findById(Long id);
     List<LessonResponse> findAll();
     void deleteById(Long id);
-    List<LessonResponse> findByGradeId(Long gradeId);
 }

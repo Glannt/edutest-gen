@@ -11,5 +11,4 @@ public interface GradeService {
     GradeResponse findById(Long id);
     List<GradeResponse> findAll();
     void deleteById(Long id);
-    List<GradeResponse> findByLessonId(Long lessonId);
 }

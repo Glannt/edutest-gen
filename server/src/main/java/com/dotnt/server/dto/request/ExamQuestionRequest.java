@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ExamQuestionRequest {
-    private Long examId;
     private Long questionId;
-    private Integer orderNumber;
-    private Double score;
+    private Double finalPoints; // Nếu null sẽ lấy từ question.level.defaultPoints
 }

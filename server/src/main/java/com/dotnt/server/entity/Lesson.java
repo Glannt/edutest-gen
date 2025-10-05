@@ -31,10 +31,6 @@ public class Lesson extends BaseEntity {
     @Builder.Default
     private Integer orderIndex = 0;
 
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    @JsonManagedReference
-    private Set<LessonGrade> lessonGrades = new HashSet<>();
 
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

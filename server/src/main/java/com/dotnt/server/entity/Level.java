@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,5 +33,5 @@ public class Level extends BaseEntity {
     @OneToMany(mappedBy = "level", cascade = CascadeType.ALL)
     @Builder.Default
     @JsonManagedReference
-    private Set<ExamMatrixDetail> examMatrixDetails = new HashSet<>();
+    private Set<MatrixDetail> matrixDetails = new HashSet<>();
 }

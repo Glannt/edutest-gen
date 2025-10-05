@@ -2,10 +2,7 @@ package com.dotnt.server.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,7 +24,7 @@ public class Grade extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy = "grade", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "grades")
     @Builder.Default
-    private Set<LessonGrade> lessonGrades = new HashSet<>();
+    private Set<Subject> subjects = new HashSet<>();
 }

@@ -2,14 +2,11 @@ package com.dotnt.server.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -17,8 +14,6 @@ public class ExamGenerationRequest {
 
     @NotNull(message = "Grade ID is required")
     private Long gradeId;
-
-    private List<Long> lessonIds; // Optional, if empty will use all lessons
 
     @NotNull(message = "Difficulty ID is required")
     private Long levelId;

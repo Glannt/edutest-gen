@@ -17,5 +17,5 @@ public class MatrixResponse extends BaseDto {
     private String description;
     private Integer totalQuestions;
     private Integer durationMinutes;
-    private List<ExamMatrixDetailResponse> matrixDetails;
+    private List<MatrixDetailResponse> matrixDetails;
 }

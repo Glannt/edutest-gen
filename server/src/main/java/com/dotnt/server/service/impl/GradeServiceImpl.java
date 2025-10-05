@@ -3,12 +3,10 @@ package com.dotnt.server.service.impl;
 import com.dotnt.server.dto.GradeDto;
 import com.dotnt.server.dto.response.GradeResponse;
 import com.dotnt.server.entity.Grade;
-import com.dotnt.server.entity.LessonGrade;
 import com.dotnt.server.repository.GradeRepository;
 import com.dotnt.server.repository.LessonGradeRepository;
 import com.dotnt.server.repository.LessonRepository;
 import com.dotnt.server.service.GradeService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +17,12 @@ import java.util.stream.Collectors;
 public class GradeServiceImpl implements GradeService {
     private final GradeRepository gradeRepository;
     private final LessonRepository lessonRepository;
-    private final LessonGradeRepository lessonGradeRepository;
 
-    public GradeServiceImpl(GradeRepository gradeRepository, LessonRepository lessonRepository, LessonGradeRepository lessonGradeRepository) {
+
+    public GradeServiceImpl(GradeRepository gradeRepository, LessonRepository lessonRepository) {
         this.gradeRepository = gradeRepository;
         this.lessonRepository = lessonRepository;
-        this.lessonGradeRepository = lessonGradeRepository;
+
     }
 
     @Override
@@ -43,17 +41,7 @@ public class GradeServiceImpl implements GradeService {
         Grade savedGrade = gradeRepository.save(grade);
 
         // Handle lesson associations if present
-        if (gradeDto.getLessonIds() != null && !gradeDto.getLessonIds().isEmpty()) {
-            gradeDto.getLessonIds().forEach(lessonId -> {
-                lessonRepository.findById(lessonId).ifPresent(lesson -> {
-                    LessonGrade lessonGrade = LessonGrade.builder()
-                            .lesson(lesson)
-                            .grade(savedGrade)
-                            .build();
-                    lessonGradeRepository.save(lessonGrade);
-                });
-            });
-        }
+
 
         return convertToResponse(savedGrade);
     }
@@ -75,20 +63,6 @@ public class GradeServiceImpl implements GradeService {
 
         Grade updatedGrade = gradeRepository.save(grade);
 
-        // Update lesson associations
-        lessonGradeRepository.deleteByGradeId(updatedGrade.getId());
-
-        if (gradeDto.getLessonIds() != null && !gradeDto.getLessonIds().isEmpty()) {
-            gradeDto.getLessonIds().forEach(lessonId -> {
-                lessonRepository.findById(lessonId).ifPresent(lesson -> {
-                    LessonGrade lessonGrade = LessonGrade.builder()
-                            .lesson(lesson)
-                            .grade(updatedGrade)
-                            .build();
-                    lessonGradeRepository.save(lessonGrade);
-                });
-            });
-        }
 
         return convertToResponse(updatedGrade);
     }
@@ -113,29 +87,15 @@ public class GradeServiceImpl implements GradeService {
         if (!gradeRepository.existsById(id)) {
             throw new RuntimeException("Grade not found");
         }
-        lessonGradeRepository.deleteByGradeId(id);
         gradeRepository.deleteById(id);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<GradeResponse> findByLessonId(Long lessonId) {
-        return lessonGradeRepository.findByLessonId(lessonId).stream()
-                .map(LessonGrade::getGrade)
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
-    }
 
     private GradeResponse convertToResponse(Grade grade) {
-        List<Long> lessonIds = lessonGradeRepository.findByGradeId(grade.getId()).stream()
-                .map(lg -> lg.getLesson().getId())
-                .collect(Collectors.toList());
-
         return GradeResponse.builder()
                 .id(grade.getId())
                 .name(grade.getName())
                 .description(grade.getDescription())
-//                .lessonIds(lessonIds)
                 .createdAt(grade.getCreatedAt())
                 .updatedAt(grade.getUpdatedAt())
                 .build();

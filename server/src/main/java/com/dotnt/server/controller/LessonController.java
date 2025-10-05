@@ -38,11 +38,6 @@ public class LessonController {
         return ResponseEntity.ok(lessonService.findAll());
     }
 
-    @GetMapping("/grade/{gradeId}")
-    public ResponseEntity<List<LessonResponse>> getLessonsByGrade(@PathVariable Long gradeId) {
-        return ResponseEntity.ok(lessonService.findByGradeId(gradeId));
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLesson(@PathVariable Long id) {
         lessonService.deleteById(id);

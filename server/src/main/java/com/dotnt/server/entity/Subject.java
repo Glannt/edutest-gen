@@ -31,4 +31,13 @@ public class Subject extends BaseEntity {
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Chapter> chapters = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "subject_grade", // Tên bảng trung gian
+            joinColumns = @JoinColumn(name = "subject_id"), // Khóa ngoại liên kết với Subject
+            inverseJoinColumns = @JoinColumn(name = "grade_id") // Khóa ngoại liên kết với Grade
+    )
+    @Builder.Default
+    private Set<Grade> grades = new HashSet<>();
 }

@@ -2,6 +2,8 @@ package com.dotnt.server.controller;
 
 import com.dotnt.server.annotation.RestResponse;
 import com.dotnt.server.dto.SubjectDto;
+import com.dotnt.server.entity.Grade;
+import com.dotnt.server.entity.Subject;
 import com.dotnt.server.service.SubjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/subjects")
@@ -54,5 +57,20 @@ public class SubjectController {
     @GetMapping("/search")
     public List<SubjectDto> searchByName(@RequestParam("name") String name) {
         return subjectService.findByNameContaining(name);
+    }
+
+    @PostMapping("/{subjectId}/grades/{gradeId}")
+    public Subject addGrade(@PathVariable Long subjectId, @PathVariable Long gradeId) {
+        return subjectService.addGradeToSubject(subjectId, gradeId);
+    }
+
+    @DeleteMapping("/{subjectId}/grades/{gradeId}")
+    public Subject removeGrade(@PathVariable Long subjectId, @PathVariable Long gradeId) {
+        return subjectService.removeGradeFromSubject(subjectId, gradeId);
+    }
+
+    @GetMapping("/{subjectId}/grades")
+    public Set<Grade> getGrades(@PathVariable Long subjectId) {
+        return subjectService.getGradesOfSubject(subjectId);
     }
 }

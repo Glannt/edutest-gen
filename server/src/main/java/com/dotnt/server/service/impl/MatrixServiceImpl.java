@@ -1,9 +1,8 @@
 package com.dotnt.server.service.impl;
 
 import com.dotnt.server.dto.request.MatrixRequest;
-import com.dotnt.server.dto.response.ExamMatrixDetailResponse;
+import com.dotnt.server.dto.response.MatrixDetailResponse;
 import com.dotnt.server.dto.response.MatrixResponse;
-import com.dotnt.server.entity.ExamMatrixDetail;
 import com.dotnt.server.entity.Matrix;
 import com.dotnt.server.repository.LevelRepository;
 import com.dotnt.server.repository.MatrixRepository;
@@ -55,8 +54,8 @@ public class MatrixServiceImpl implements MatrixService {
                 .description(matrix.getDescription())
                 .totalQuestions(matrix.getTotalQuestions())
                 .durationMinutes(matrix.getDurationMinutes())
-                .matrixDetails(matrix.getExamMatrixDetails().stream()
-                        .map(detail -> ExamMatrixDetailResponse.builder()
+                .matrixDetails(matrix.getMatrixDetails().stream()
+                        .map(detail -> MatrixDetailResponse.builder()
                                 .id(detail.getId())
                                 .levelName(detail.getLevel().getName())
                                 .matrixName(detail.getMatrix().getName())
@@ -73,7 +72,7 @@ public class MatrixServiceImpl implements MatrixService {
                 .description(matrix.getDescription())
                 .totalQuestions(matrix.getTotalQuestions())
                 .durationMinutes(matrix.getDurationMinutes())
-//                .examMatrixDetails(matrix.getMatrixDetails().stream()
+//                .matrixDetails(matrix.getMatrixDetails().stream()
 //                        .map(detail -> ExamMatrixDetail.builder()
 //                                .id(detail.getId())
 //                                .level(levelRepository.findById(detail.getLevelId())

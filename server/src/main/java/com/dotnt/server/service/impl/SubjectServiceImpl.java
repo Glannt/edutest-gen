@@ -3,7 +3,9 @@ package com.dotnt.server.service.impl;
 
 import com.dotnt.server.dto.SubjectDto;
 import com.dotnt.server.dto.response.ChapterResponse;
+import com.dotnt.server.entity.Grade;
 import com.dotnt.server.entity.Subject;
+import com.dotnt.server.repository.GradeRepository;
 import com.dotnt.server.repository.SubjectRepository;
 import com.dotnt.server.repository.UserRepository;
 import com.dotnt.server.service.SubjectService;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 public class SubjectServiceImpl implements SubjectService {
     private final SubjectRepository subjectRepository;
     private final UserRepository userRepository;
+    private final GradeRepository gradeRepository;
 
     @Override
     @Transactional
@@ -98,5 +102,39 @@ public class SubjectServiceImpl implements SubjectService {
                 .createdAt(subject.getCreatedAt())
                 .updatedAt(subject.getUpdatedAt())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public Subject addGradeToSubject(Long subjectId, Long gradeId) {
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+        Grade grade = gradeRepository.findById(gradeId)
+                .orElseThrow(() -> new RuntimeException("Grade not found"));
+
+        subject.getGrades().add(grade); // Hibernate tự quản lý bảng trung gian
+        return subjectRepository.save(subject);
+    }
+
+    // Xóa grade khỏi subject
+    @Override
+    @Transactional
+    public Subject removeGradeFromSubject(Long subjectId, Long gradeId) {
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+        Grade grade = gradeRepository.findById(gradeId)
+                .orElseThrow(() -> new RuntimeException("Grade not found"));
+
+        subject.getGrades().remove(grade);
+        return subjectRepository.save(subject);
+    }
+
+    // Lấy tất cả grade của subject
+    @Override
+    @Transactional(readOnly = true)
+    public Set<Grade> getGradesOfSubject(Long subjectId) {
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+        return subject.getGrades();
     }
 }

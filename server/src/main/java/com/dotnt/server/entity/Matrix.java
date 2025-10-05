@@ -40,7 +40,7 @@ public class Matrix extends BaseEntity {
     @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @Builder.Default
-    private Set<ExamMatrixDetail> examMatrixDetails = new HashSet<>();
+    private Set<MatrixDetail> matrixDetails = new HashSet<>();
 
     @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

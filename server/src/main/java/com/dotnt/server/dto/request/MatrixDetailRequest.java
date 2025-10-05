@@ -7,8 +7,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ExamMatrixDetailRequest {
+public class MatrixDetailRequest {
     private Long matrixId;
     private Long levelId;
+    private Long lessonId;
     private Integer quantity;
 }

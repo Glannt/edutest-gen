@@ -2,12 +2,9 @@ package com.dotnt.server.service.impl;
 
 import com.dotnt.server.dto.LessonDto;
 import com.dotnt.server.dto.response.LessonResponse;
-import com.dotnt.server.entity.Grade;
 import com.dotnt.server.entity.Lesson;
-import com.dotnt.server.entity.LessonGrade;
 import com.dotnt.server.repository.ChapterRepository;
 import com.dotnt.server.repository.GradeRepository;
-import com.dotnt.server.repository.LessonGradeRepository;
 import com.dotnt.server.repository.LessonRepository;
 import com.dotnt.server.service.LessonService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +20,6 @@ public class LessonServiceImpl implements LessonService {
     private final LessonRepository lessonRepository;
     private final GradeRepository gradeRepository;
     private final ChapterRepository chapterRepository;
-    private final LessonGradeRepository lessonGradeRepository;
 
     @Override
     @Transactional
@@ -38,18 +34,7 @@ public class LessonServiceImpl implements LessonService {
 
         Lesson savedLesson = lessonRepository.save(lesson);
 
-        // Gắn nhiều Grade
-        if (lessonDto.getGradeIds() != null && !lessonDto.getGradeIds().isEmpty()) {
-            for (Long gradeId : lessonDto.getGradeIds()) {
-                Grade grade = gradeRepository.findById(gradeId)
-                        .orElseThrow(() -> new RuntimeException("Grade not found with id " + gradeId));
-                LessonGrade lessonGrade = LessonGrade.builder()
-                        .lesson(savedLesson)
-                        .grade(grade)
-                        .build();
-                lessonGradeRepository.save(lessonGrade);
-            }
-        }
+
 
         return convertToResponse(savedLesson);
     }
@@ -65,22 +50,6 @@ public class LessonServiceImpl implements LessonService {
         lesson.setOrderIndex(lessonDto.getOrderIndex());
 
         Lesson updatedLesson = lessonRepository.save(lesson);
-
-        // Xoá quan hệ cũ
-        lessonGradeRepository.deleteByLessonId(updatedLesson.getId());
-
-        // Thêm quan hệ mới
-        if (lessonDto.getGradeIds() != null && !lessonDto.getGradeIds().isEmpty()) {
-            for (Long gradeId : lessonDto.getGradeIds()) {
-                Grade grade = gradeRepository.findById(gradeId)
-                        .orElseThrow(() -> new RuntimeException("Grade not found with id " + gradeId));
-                LessonGrade lessonGrade = LessonGrade.builder()
-                        .lesson(updatedLesson)
-                        .grade(grade)
-                        .build();
-                lessonGradeRepository.save(lessonGrade);
-            }
-        }
 
         return convertToResponse(updatedLesson);
     }
@@ -108,20 +77,7 @@ public class LessonServiceImpl implements LessonService {
         lessonRepository.deleteById(id);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<LessonResponse> findByGradeId(Long gradeId) {
-        return lessonGradeRepository.findByGradeId(gradeId).stream()
-                .map(LessonGrade::getLesson)
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
-    }
-
     private LessonResponse convertToResponse(Lesson lesson) {
-        // lấy danh sách gradeId từ bảng LessonGrade
-        List<Long> gradeIds = lessonGradeRepository.findByLessonId(lesson.getId()).stream()
-                .map(lg -> lg.getGrade().getId())
-                .collect(Collectors.toList());
 
         return LessonResponse.builder()
                 .id(lesson.getId())
@@ -130,8 +86,6 @@ public class LessonServiceImpl implements LessonService {
                 .orderIndex(lesson.getOrderIndex())
                 .createdAt(lesson.getCreatedAt())
                 .updatedAt(lesson.getUpdatedAt())
-                // nếu muốn trả về danh sách gradeId thì bổ sung field trong LessonResponse
-                // .gradeIds(gradeIds)
                 .build();
     }
 }
