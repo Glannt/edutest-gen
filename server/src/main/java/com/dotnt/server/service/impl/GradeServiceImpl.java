@@ -4,7 +4,6 @@ import com.dotnt.server.dto.GradeDto;
 import com.dotnt.server.dto.response.GradeResponse;
 import com.dotnt.server.entity.Grade;
 import com.dotnt.server.repository.GradeRepository;
-import com.dotnt.server.repository.LessonGradeRepository;
 import com.dotnt.server.repository.LessonRepository;
 import com.dotnt.server.service.GradeService;
 import org.springframework.stereotype.Service;

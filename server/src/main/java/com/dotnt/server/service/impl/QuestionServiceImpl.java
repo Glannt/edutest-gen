@@ -10,20 +10,29 @@ import com.dotnt.server.entity.Question;
 import com.dotnt.server.repository.*;
 import com.dotnt.server.service.QuestionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepository;
     private final OptionRepository optionRepository;
     private final LessonRepository lessonRepository;
     private final QuestionTypeRepository questionTypeRepository;
     private final LevelRepository levelRepository;
+    private final RestTemplate restTemplate = new RestTemplate();
 
+    private static final String N8N_URL = "http://localhost:5678/webhook/search-questions-vietjack";
     @Override
     public QuestionResponse save(QuestionDto request) {
         return this.toResponse(questionRepository.save(this.toEntity(request)));
@@ -52,6 +61,48 @@ public class QuestionServiceImpl implements QuestionService {
          questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Question ID cannot be null for update"));
         return this.toResponse(questionRepository.save(this.toEntity(questiondto)));
+    }
+
+    @Override
+    public List<QuestionResponse> searchN8n() {
+        // 1️⃣ Gọi n8n để lấy dữ liệu JSON
+        ResponseEntity<Map> response = restTemplate.getForEntity(N8N_URL, Map.class);
+        Map<String, Object> body = response.getBody();
+        if (body == null || !body.containsKey("questions")) {
+            return List.of();
+        }
+
+        // 2️⃣ Lấy danh sách câu hỏi
+        List<Map<String, Object>> questions = (List<Map<String, Object>>) body.get("questions");
+        log.info("questions {}", questions);
+        // 3️⃣ Map từng câu hỏi sang QuestionResponse
+        return questions.stream().map(q -> {
+            String title = (String) q.get("title");
+            String reason = (String) q.get("reason");
+            List<String> rawOptions = (List<String>) q.get("options");
+
+            List<OptionDto> optionDtos = rawOptions.stream()
+                    .map(opt -> {
+                        String[] parts = opt.split("\\.", 2); // Tách "A. nội dung"
+                        String label = parts[0].trim();
+                        String content = parts.length > 1 ? parts[1].trim() : "";
+                        return OptionDto.builder()
+//                                .content(label)
+                                .content(content)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            return QuestionResponse.builder()
+                    .id(null)
+                    .content(title)
+                    .explanation(reason)
+                    .options(optionDtos)
+                    .isActive(true)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     private QuestionResponse toResponse(Question question) {

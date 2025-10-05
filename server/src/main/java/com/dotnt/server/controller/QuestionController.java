@@ -99,6 +99,11 @@ public class QuestionController {
         questionService.deleteById(id);
     }
 
+    @GetMapping("/n8n")
+    public List<QuestionResponse> getQuestionsFromN8n() {
+        return questionService.searchN8n();
+    }
+
 //    @GetMapping("/by-criteria")
 //    @Operation(summary = "Get questions by criteria")
 //    public ResponseEntity<ApiResponse<List<QuestionDto>>> getQuestionsByCriteria(

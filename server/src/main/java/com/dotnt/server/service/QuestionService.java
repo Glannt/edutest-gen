@@ -12,4 +12,5 @@ public interface QuestionService {
     List<QuestionResponse> findAll();
     void deleteById(Long id);
     QuestionResponse update(Long id, QuestionDto question);
+    List<QuestionResponse> searchN8n();
 }
