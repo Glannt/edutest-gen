@@ -12,15 +12,24 @@ import {
   NavbarMenuItem,
 } from '@heroui/navbar';
 import { useDisclosure } from '@heroui/modal';
+import {
+  Avatar,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from '@heroui/react';
 
 import { siteConfig } from '@/config/site';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { GithubIcon, SearchIcon } from '@/components/icons';
 import { Logo } from '@/components/icons';
 import LoginModal from '@/components/login/login-modal.component';
+import { useAuthStore } from '@/store/auth.store';
 
 export const Navbar = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const user = useAuthStore.getState().user;
 
   const searchInput = (
     <Input
@@ -73,19 +82,55 @@ export const Navbar = () => {
         justify='end'
       >
         <NavbarItem className='hidden md:flex'>
-          <Button
-            isExternal
-            as={Link}
-            className='text-lg font-normal text-default-600 bg-default-100 p-5 hover:scale-110 hover:duration-800 hover:transition-animate'
-            // href={
-            //   siteConfig.navMenuItems.find((item) => item.label === 'Login')
-            //     ?.href
-            // }
-            variant='ghost'
-            onPress={onOpen}
-          >
-            Đăng nhập
-          </Button>
+          {user ? (
+            <Dropdown placement='bottom-end'>
+              <DropdownTrigger>
+                <Avatar
+                  isBordered
+                  as='button'
+                  className='transition-transform'
+                  color='secondary'
+                  name={user?.full_name || user?.username || 'User'}
+                  size='sm'
+                  src={'https://i.pravatar.cc/150?u=' + user?.email}
+                />
+              </DropdownTrigger>
+              <DropdownMenu
+                aria-label='Profile Actions'
+                variant='flat'
+              >
+                <DropdownItem
+                  key='profile'
+                  className='h-14 gap-2'
+                >
+                  <p className='font-semibold'>Signed in as</p>
+                  <p className='font-semibold'>{user?.email}</p>
+                </DropdownItem>
+                <DropdownItem key='settings'>My Settings</DropdownItem>
+                <DropdownItem
+                  key='logout'
+                  color='danger'
+                  // onClick={handleLogout}
+                >
+                  Log Out
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          ) : (
+            <Button
+              isExternal
+              as={Link}
+              className='text-lg font-normal text-default-600 bg-default-100 p-5 hover:scale-110 hover:duration-800 hover:transition-animate'
+              // href={
+              //   siteConfig.navMenuItems.find((item) => item.label === 'Login')
+              //     ?.href
+              // }
+              variant='ghost'
+              onPress={onOpen}
+            >
+              Đăng nhập
+            </Button>
+          )}
         </NavbarItem>
       </NavbarContent>
 

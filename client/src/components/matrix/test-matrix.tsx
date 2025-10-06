@@ -36,10 +36,24 @@
 //   );
 // };
 
-import { TableData, useTableDataMatrix } from '@/hooks/useTableData';
+import { useTableDataMatrix } from '@/hooks/useTableData';
 
-export const TestMatrix = () => {
-  const tableData = useTableDataMatrix();
+export const TestMatrixDynamic = () => {
+  const { tableData, levels, questionTypes, subjects } = useTableDataMatrix();
+
+  const levelQuestionMap: Record<string, string[]> = {};
+
+  levels.forEach((level) => {
+    levelQuestionMap[level] = questionTypes.filter((qt) =>
+      tableData.some((row) => row[`${level}_${qt}`] !== undefined)
+    );
+  });
+
+  const toNumber = (value: unknown) => {
+    if (typeof value === 'number') return value;
+
+    return 0;
+  };
 
   return (
     <div className='w-full overflow-x-auto'>
@@ -80,115 +94,117 @@ export const TestMatrix = () => {
             </th>
           </tr>
           <tr>
-            <th
-              className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
-              colSpan={3}
-            >
-              NB
-            </th>
-            <th
-              className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
-              colSpan={3}
-            >
-              TH
-            </th>
-            <th
-              className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
-              colSpan={3}
-            >
-              VD
-            </th>
-            <th
-              className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
-              rowSpan={2}
-            >
-              TN
-            </th>
-            <th
-              className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
-              rowSpan={2}
-            >
-              D-S
-            </th>
-            <th
-              className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
-              rowSpan={2}
-            >
-              TL-N
-            </th>
-          </tr>
-          <tr>
-            {[
-              'TN',
-              'D-S',
-              'TL-N',
-              'TN',
-              'D-S',
-              'TL-N',
-              'TN',
-              'D-S',
-              'TL-N',
-            ].map((header, idx) => (
+            {levels.map((level) => (
               <th
-                key={idx}
-                className='border border-table-border bg-table-header px-3 py-2 text-center text-xs font-bold text-table-header-foreground'
+                key={level}
+                className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
+                colSpan={questionTypes.length}
               >
-                {header}
+                {level}
               </th>
             ))}
+            {/* dynamic question types */}
+
+            {questionTypes.map((qt) => (
+              <th
+                key={`${qt}`}
+                className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
+                rowSpan={2}
+              >
+                {qt}
+              </th>
+            ))}
+          </tr>
+          {/* dynamic level question type */}
+          <tr>
+            {levels.map((level) =>
+              questionTypes.map((qt) => (
+                <th
+                  key={`${level}_${qt}`}
+                  className='border border-table-border bg-table-header px-3 py-2 text-center font-bold text-xs text-table-header-foreground'
+                >
+                  {qt}
+                </th>
+              ))
+            )}
           </tr>
         </thead>
 
         {/* Body */}
+
+        {/* test */}
         <tbody>
           {tableData.map((row, idx) => (
             <tr key={idx}>
+              {/* Chapter */}
               {!row.isSubRow && row.rowSpan && row.content !== 'TỔNG' && (
                 <td
-                  className={`border border-table-border px-4 py-3 text-center align-middle`}
+                  className='border border-table-border px-4 py-3 text-center align-middle'
                   rowSpan={row.rowSpan}
                 >
                   {row.chapter}
                 </td>
               )}
+              {/* Content */}
               <td
                 className={`border border-table-border px-4 py-3 text-left ${
                   row.content === 'TỔNG'
                     ? 'bg-table-header font-bold text-table-header-foreground'
                     : ''
                 }`}
-                colSpan={row.content === 'TỔNG' ? 2 : 1}
               >
                 {row.content}
               </td>
-
-              {[
-                'nb_tn',
-                'nb_ds',
-                'nb_tln',
-                'th_tn',
-                'th_ds',
-                'th_tln',
-                'vd_tn',
-                'vd_ds',
-                'vd_tln',
-                'total_tn',
-                'total_ds',
-                'total_tln',
-              ].map((key) => (
+              {/* Dynamic level_questionType */}
+              {levels.map((level) =>
+                questionTypes.map((qt) => (
+                  <td
+                    key={`${level}_${qt}_${idx}`}
+                    className={`border border-table-border px-3 py-2 text-center ${
+                      row.content === 'TỔNG' ? 'bg-table-total font-bold' : ''
+                    }`}
+                  >
+                    {row[`${level}_${qt}`] ?? ''}
+                  </td>
+                ))
+              )}
+              {/* Subjects */}
+              {/* {subjects.map((sub) => (
                 <td
-                  key={key}
-                  className={`border border-table-border px-3 py-3 text-center font-bold ${
-                    row.content === 'TỔNG'
-                      ? ['total_tn', 'total_ds', 'total_tln'].includes(key)
-                        ? 'text-destructive bg-table-total'
-                        : 'bg-table-total'
-                      : ''
+                  key={`${sub}_${idx}`}
+                  className={`border border-table-border px-3 py-2 text-center ${
+                    row.content === 'TỔNG' ? 'bg-table-total font-bold' : ''
                   }`}
                 >
-                  {row[key as keyof TableData] || ''}
+                  {row[sub] ?? ''}
                 </td>
-              ))}
+              ))} */}
+              {/* Tổng số câu hỏi (TN, D-S, TL-N) */}
+              <td
+                className={`border border-table-border px-3 py-2 text-center font-bold ${
+                  row.content === 'TỔNG' ? 'bg-table-total' : ''
+                }`}
+              >
+                {row.total_tn ?? ''}
+              </td>
+              <td
+                className={`border border-table-border px-3 py-2 text-center font-bold ${
+                  row.content === 'TỔNG' ? 'bg-table-total' : ''
+                }`}
+              >
+                {row.total_ds ?? ''}
+              </td>
+              <td
+                className={`border border-table-border px-3 py-2 text-center font-bold ${
+                  row.content === 'TỔNG' ? 'bg-table-total' : ''
+                }`}
+              >
+                {row.total_tln ?? ''}
+              </td>
+              {/* Tổng điểm */}
+              <td className='border border-table-border px-3 py-2 text-center font-bold'>
+                {row.totalScore ?? ''}
+              </td>
             </tr>
           ))}
         </tbody>

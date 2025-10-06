@@ -3,6 +3,9 @@ import React from 'react';
 
 import { StatusOptions } from '@/interface/status-option.interface';
 import { useMatrixStore } from '@/store/matrix.store';
+import { TableDataMatrix } from '@/interface/table-data-matrix.interface';
+import { useLevels } from '@/hooks/useLevels';
+import { useQuestionTypes } from '@/store/useQuestionTypeStore';
 export interface UseTableDataProps<T> {
   data: T[];
   columns: { name: string; uid: string; sortable?: boolean }[];
@@ -92,133 +95,104 @@ export function useTableData<T extends Record<string, any>>(
   };
 }
 
-interface TestStructureItem {
-  id: string;
-  subject: string;
-  grade: string;
-  chapter: string;
-  lesson: string;
-  questionCount: number;
-  level: 'NB' | 'TH' | 'VD';
-  questionType: 'TN' | 'DS' | 'TLN';
-}
-
-export interface TableData {
-  chapter: string;
-  content: string;
-  nb_tn?: number;
-  nb_ds?: number;
-  nb_tln?: number;
-  th_tn?: number;
-  th_ds?: number;
-  th_tln?: number;
-  vd_tn?: number;
-  vd_ds?: number;
-  vd_tln?: number;
-  total_tn?: number;
-  total_ds?: number;
-  total_tln?: number;
-  percentage?: string;
-  sectionColor?: string;
-  rowSpan?: number;
-  isSubRow?: boolean;
-}
-
 export const useTableDataMatrix = () => {
-  const structures = useMatrixStore<TestStructureItem[]>(
-    (s: any) => s.structures
-  );
+  const structures = useMatrixStore((s) => s.structures);
+
+  // Lấy levels và questionTypes từ backend
+  const { data: levelsData = [] } = useLevels();
+  const { data: questionTypesData = [] } = useQuestionTypes();
+
+  console.log(questionTypesData);
+
+  // Map ra danh sách string để làm header dynamic
+  const levels = levelsData.map((l: any) => l.name);
+  const questionTypes = questionTypesData.map((qt: any) => qt.name);
+
+  // Lấy danh sách subjects từ structures
+  const subjectsSet = new Set<string>();
+
+  structures.forEach((item) => subjectsSet.add(item.subject));
+  const subjects = Array.from(subjectsSet);
+
+  // Tổng theo level/questionType
+  const totalLevelCounts: Record<string, Record<string, number>> = {};
+
+  levels.forEach((level: any) => {
+    totalLevelCounts[level] = {};
+    questionTypes.forEach((qt) => (totalLevelCounts[level][qt] = 0));
+  });
+
+  // Tổng theo subject
+  const totalSubjectCounts: Record<string, number> = {};
+
+  subjects.forEach((sub) => (totalSubjectCounts[sub] = 0));
+
+  let totalScore = 0;
 
   // Gom theo chapter
-  const chapterMap = new Map<string, TestStructureItem[]>();
+  const chapterMap = new Map<string, typeof structures>();
 
   structures.forEach((item) => {
     if (!chapterMap.has(item.chapter)) chapterMap.set(item.chapter, []);
     chapterMap.get(item.chapter)!.push(item);
   });
 
-  const tableData: TableData[] = [];
-
-  // Biến tính tổng toàn bảng
-  const totalCounts = {
-    NB: { TN: 0, DS: 0, TLN: 0 },
-    TH: { TN: 0, DS: 0, TLN: 0 },
-    VD: { TN: 0, DS: 0, TLN: 0 },
-    total_tn: 0,
-    total_ds: 0,
-    total_tln: 0,
-    totalScore: 0,
-  };
+  const tableData: TableDataMatrix[] = [];
 
   chapterMap.forEach((lessons, chapterName) => {
-    const rowSpan = lessons.length;
-
     lessons.forEach((lesson, idx) => {
-      const row: TableData = {
+      const row: TableDataMatrix = {
         chapter: idx === 0 ? chapterName : '',
         content: lesson.lesson,
         isSubRow: idx !== 0,
-        rowSpan: idx === 0 ? rowSpan : undefined,
+        rowSpan: idx === 0 ? lessons.length : undefined,
       };
 
-      // Gán số câu theo level/questionType
-      switch (lesson.level) {
-        case 'NB':
-          if (lesson.questionType === 'TN') row.nb_tn = lesson.questionCount;
-          if (lesson.questionType === 'DS') row.nb_ds = lesson.questionCount;
-          if (lesson.questionType === 'TLN') row.nb_tln = lesson.questionCount;
-          totalCounts.NB[lesson.questionType] += lesson.questionCount;
-          break;
-        case 'TH':
-          if (lesson.questionType === 'TN') row.th_tn = lesson.questionCount;
-          if (lesson.questionType === 'DS') row.th_ds = lesson.questionCount;
-          if (lesson.questionType === 'TLN') row.th_tln = lesson.questionCount;
-          totalCounts.TH[lesson.questionType] += lesson.questionCount;
-          break;
-        case 'VD':
-          if (lesson.questionType === 'TN') row.vd_tn = lesson.questionCount;
-          if (lesson.questionType === 'DS') row.vd_ds = lesson.questionCount;
-          if (lesson.questionType === 'TLN') row.vd_tln = lesson.questionCount;
-          totalCounts.VD[lesson.questionType] += lesson.questionCount;
-          break;
+      // Gán dynamic level/questionType nếu tồn tại trong danh sách backend
+      if (
+        levels.includes(lesson.level) &&
+        questionTypes.includes(lesson.questionType)
+      ) {
+        row[`${lesson.level}_${lesson.questionType}`] = lesson.questionCount;
+        totalLevelCounts[lesson.level][lesson.questionType] +=
+          lesson.questionCount;
       }
 
-      // Tổng cho mỗi loại câu trong dòng
-      row.total_tn = (row.nb_tn || 0) + (row.th_tn || 0) + (row.vd_tn || 0);
-      row.total_ds = (row.nb_ds || 0) + (row.th_ds || 0) + (row.vd_ds || 0);
-      row.total_tln = (row.nb_tln || 0) + (row.th_tln || 0) + (row.vd_tln || 0);
+      // Gán dynamic subject
+      row[lesson.subject] = lesson.questionCount;
+      totalSubjectCounts[lesson.subject] += lesson.questionCount;
 
-      // Cộng vào tổng toàn bảng
-      totalCounts.total_tn += row.total_tn;
-      totalCounts.total_ds += row.total_ds;
-      totalCounts.total_tln += row.total_tln;
-      totalCounts.totalScore += lesson.questionCount;
+      // Tổng cho dòng
+      row.totalScore = lesson.questionCount;
+      totalScore += lesson.questionCount;
 
       tableData.push(row);
     });
   });
 
-  // Thêm tổng cuối bảng
-  const totalRow: TableData = {
+  // Tổng cuối bảng
+  const totalRow: TableDataMatrix = {
     chapter: '',
     content: 'TỔNG',
-    nb_tn: totalCounts.NB.TN,
-    nb_ds: totalCounts.NB.DS,
-    nb_tln: totalCounts.NB.TLN,
-    th_tn: totalCounts.TH.TN,
-    th_ds: totalCounts.TH.DS,
-    th_tln: totalCounts.TH.TLN,
-    vd_tn: totalCounts.VD.TN,
-    vd_ds: totalCounts.VD.DS,
-    vd_tln: totalCounts.VD.TLN,
-    total_tn: totalCounts.total_tn,
-    total_ds: totalCounts.total_ds,
-    total_tln: totalCounts.total_tln,
-    percentage: `${totalCounts.totalScore}`, // nếu muốn hiển thị tổng điểm
     isSubRow: false,
   };
 
-  tableData.push(totalRow);
+  levels.forEach((level) => {
+    questionTypes.forEach((qt) => {
+      totalRow[`${level}_${qt}`] = totalLevelCounts[level][qt];
+    });
+  });
 
-  return tableData;
+  subjects.forEach((sub) => {
+    totalRow[sub] = totalSubjectCounts[sub];
+  });
+
+  totalRow.totalScore = totalScore;
+
+  return {
+    tableData,
+    levels,
+    questionTypes,
+    subjects,
+  };
 };

@@ -40,7 +40,7 @@ interface GenericTableProps<T> {
   renderCell: (item: T, columnKey: React.Key) => React.ReactNode;
 }
 
-export function GenericTable<T extends { id: string }>({
+export function GenericTable<T extends { id: number }>({
   data,
   columns,
   visibleColumns,
@@ -143,7 +143,7 @@ export function GenericTable<T extends { id: string }>({
       </TableHeader>
 
       <TableBody
-        emptyContent={'No data found'}
+        emptyContent={'Không có dữ liệu'}
         items={sortedItems}
       >
         {(item) => (

@@ -1,19 +1,44 @@
 'use client';
-import React, { useState } from 'react';
-import { SortDescriptor, Selection, Button, Tooltip } from '@heroui/react';
+import React, { useMemo, useState } from 'react';
+import {
+  SortDescriptor,
+  Selection,
+  Button,
+  Tooltip,
+  CircularProgress,
+} from '@heroui/react';
 
 import { GenericTable } from '@/components/table/generic-table';
-import { initialLevels } from '@/data/level.data';
 import { LevelInterface } from '@/interface/level.interface';
 import { INITIAL_VISIBLE_LEVEL_COLUMNS, levelColumns } from '@/utils/column';
 import { useTableData } from '@/hooks/useTableData';
 import { StatusOptions } from '@/interface/status-option.interface';
 import { TopContent } from '@/components/table/top-content';
 import LevelModal from '@/components/level/level-modal';
-import { EyeFilledIcon } from '@/components/icons';
+import { EditIcon, EyeFilledIcon, RecycleBinIcon } from '@/components/icons';
+import { useCreateLevel, useDeleteLevel, useLevels } from '@/hooks/useLevels';
 
 export default function LevelTable() {
-  const [levels, setLevels] = useState<LevelInterface[]>(initialLevels);
+  const { data: levelsPayload = [], isLoading } = useLevels();
+  const createLevel = useCreateLevel();
+  const deleteLevel = useDeleteLevel();
+
+  // ---- Map payload -> interface ----
+  const levels: LevelInterface[] = useMemo(
+    () =>
+      levelsPayload.map((lvl) => ({
+        id: lvl.id,
+        name: lvl.name,
+        description: lvl.description,
+        points: lvl.points,
+        created_at: lvl.created_at,
+        updated_at: lvl.updated_at,
+        actions: '', // placeholder cho GenericTable
+      })),
+    [levelsPayload]
+  );
+
+  // ---- UI states ----
   const [filterValue, setFilterValue] = useState('');
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
@@ -28,7 +53,9 @@ export default function LevelTable() {
   const statusOptions: StatusOptions[] = [];
   const [page, setPage] = useState(1);
   const hasSearchFilter = Boolean(filterValue);
+  // const [levels, setLevels] = useState<LevelInterface[]>(initialLevels);
 
+  // ---- Table Data ----
   const { headerColumns, filteredItems, sortedItems, pages } =
     useTableData<LevelInterface>({
       data: levels,
@@ -43,6 +70,7 @@ export default function LevelTable() {
       sortDescriptor,
     });
 
+  // ---- Render Cell ----
   const renderCell = React.useCallback(
     (level: LevelInterface, columnKey: React.Key) => {
       const cellValue = level[columnKey as keyof LevelInterface];
@@ -60,17 +88,57 @@ export default function LevelTable() {
           return <span>{level.points.toLocaleString()}</span>;
         case 'actions':
           return (
-            <Tooltip
-              content='Chi tiết'
-              delay={50}
-            >
-              <Button size='sm'>
-                <EyeFilledIcon
-                  height={16}
-                  width={16}
-                />
-              </Button>
-            </Tooltip>
+            <div className='space-x-2'>
+              <Tooltip
+                content='Chi tiết'
+                delay={50}
+              >
+                <Button size='sm'>
+                  <EyeFilledIcon
+                    height={16}
+                    width={16}
+                  />
+                </Button>
+              </Tooltip>
+              <Tooltip
+                content='Chỉnh sửa'
+                delay={50}
+              >
+                <Button size='sm'>
+                  <EditIcon
+                    height={16}
+                    width={16}
+                  />
+                </Button>
+              </Tooltip>
+              <Tooltip
+                content='Xóa'
+                delay={50}
+              >
+                <Button
+                  size='sm'
+                  onPress={async () => {
+                    const confirmed = window.confirm(
+                      `Bạn có chắc muốn xóa môn học "${level.name}"?`
+                    );
+
+                    if (!confirmed) return;
+
+                    try {
+                      await deleteLevel.mutateAsync(level.id);
+                    } catch (error) {
+                      console.error('Lỗi khi xóa level:', error);
+                      alert('Xóa thất bại! Vui lòng thử lại.');
+                    }
+                  }}
+                >
+                  <RecycleBinIcon
+                    height={16}
+                    width={16}
+                  />
+                </Button>
+              </Tooltip>
+            </div>
           );
         case 'created_at':
         case 'updated_at':
@@ -94,19 +162,18 @@ export default function LevelTable() {
     setNewLevel((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    const newItem: LevelInterface = {
-      id: String(Date.now()),
-      name: newLevel.name || '',
-      description: newLevel.description || '',
-      points: Number(newLevel.points) || 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      actions: '',
-    };
-
-    setLevels((prev) => [...prev, newItem]);
-    setIsModalOpen(false);
+  const handleSubmit = async () => {
+    try {
+      await createLevel.mutateAsync({
+        name: newLevel.name || '',
+        description: newLevel.description || '',
+        points: Number(newLevel.points) || 0,
+      });
+      setIsModalOpen(false);
+      setNewLevel({ name: '', description: '', points: 0 });
+    } catch (error) {
+      console.error('Lỗi khi tạo Level:', error);
+    }
   };
 
   const topContentProps = {
@@ -131,6 +198,17 @@ export default function LevelTable() {
     },
     onStatusChange: setStatusFilter,
   };
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <CircularProgress
+          className='text-lg'
+          title='Đang tải dữ liệu...'
+        />
+      </div>
+    );
+  }
 
   return (
     <GenericTable<LevelInterface>

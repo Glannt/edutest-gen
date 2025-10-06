@@ -1,5 +1,5 @@
 export interface LevelInterface {
-  id: string;
+  id: number;
   name: string;
   description: string;
   points: number;

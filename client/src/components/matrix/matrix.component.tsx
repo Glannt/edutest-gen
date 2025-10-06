@@ -8,7 +8,7 @@ import { KnowledgeSources } from '@/components/matrix/knowledge-sources';
 import { QuestionBank } from '@/components/matrix/question-bank';
 import { DataManagement } from '@/components/matrix/data-management';
 import { useMatrixStore } from '@/store/matrix.store';
-import { TestMatrix } from '@/components/matrix/test-matrix';
+import { TestMatrixDynamic } from '@/components/matrix/test-matrix';
 
 export default function MatrixComponent() {
   const structures = useMatrixStore((s: any) => s.structures);
@@ -132,7 +132,7 @@ export default function MatrixComponent() {
           </div>
 
           <div className='p-6 min-h-[200px]'>
-            <TestMatrix />
+            <TestMatrixDynamic />
           </div>
 
           <div className='border-t p-4'>

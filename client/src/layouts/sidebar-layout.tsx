@@ -15,7 +15,11 @@ const navItems = [
   { name: 'Dashboard', path: '/dashboard', icon: 'lucide:layout-dashboard' },
   { name: 'Độ khó', path: '/dashboard/level', icon: 'lucide:user' },
   { name: 'Môn học', path: '/dashboard/subject', icon: 'lucide:user' },
-  { name: 'Loại câu hỏi', path: '/question-type', icon: 'lucide:user' },
+  {
+    name: 'Loại câu hỏi',
+    path: '/dashboard/question-type',
+    icon: 'lucide:user',
+  },
   { name: 'Lớp', path: '/grade', icon: 'lucide:user' },
   { name: 'Bài học', path: '/lesson', icon: 'lucide:user' },
   { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:user' },

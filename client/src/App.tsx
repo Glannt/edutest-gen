@@ -9,6 +9,8 @@ import SidebarLayout from '@/layouts/sidebar-layout';
 import SubjectPage from '@/pages/subject';
 import LevelPage from '@/pages/level';
 import MatrixPage from '@/pages/matrix';
+import QuestionType from '@/pages/question-type';
+import ContentPage from '@/pages/content';
 
 function App() {
   return (
@@ -36,6 +38,14 @@ function App() {
         <Route
           element={<MatrixPage />}
           path='matrix'
+        />
+        <Route
+          element={<QuestionType />}
+          path='question-type'
+        />
+        <Route
+          element={<ContentPage />}
+          path='content'
         />
       </Route>
 

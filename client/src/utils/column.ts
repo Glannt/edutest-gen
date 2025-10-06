@@ -31,3 +31,17 @@ export const levelColumns: Column[] = [
   { uid: 'updated_at', name: 'Cập nhật', sortable: true },
   { uid: 'actions', name: 'Hành động' },
 ];
+
+export const INITIAL_VISIBLE_QUESTIONTYPE_COLUMNS = [
+  'name',
+  'description',
+  'actions',
+];
+
+export const questionTypeColumns = [
+  { key: 'name', label: 'Tên loại câu hỏi' },
+  { key: 'description', label: 'Mô tả' },
+  { key: 'created_at', label: 'Ngày tạo' },
+  { key: 'updated_at', label: 'Cập nhật' },
+  { key: 'actions', label: 'Thao tác' },
+];

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface TestStructureItem {
-  id: string;
+  id: number; // đổi từ string sang number
   subject: string;
   grade: string;
   chapter: string;
@@ -15,11 +15,13 @@ interface TestStructureItem {
 interface MatrixState {
   structures: TestStructureItem[];
   addStructure: (item: Omit<TestStructureItem, 'id'>) => void;
-  removeStructure: (id: string) => void;
+  removeStructure: (id: number) => void;
   clearStructures: () => void;
 }
 
-// ✅ Thêm persist middleware
+// Trợ giúp tạo id tự tăng
+let nextId = 1;
+
 export const useMatrixStore = create<MatrixState>()(
   persist(
     (set) => ({
@@ -28,7 +30,7 @@ export const useMatrixStore = create<MatrixState>()(
         set((state) => ({
           structures: [
             ...state.structures,
-            { id: crypto.randomUUID(), ...item },
+            { id: nextId++, ...item }, // tạo id kiểu number
           ],
         })),
       removeStructure: (id) =>

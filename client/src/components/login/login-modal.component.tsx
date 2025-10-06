@@ -1,7 +1,7 @@
 import { Input } from '@heroui/input';
 import { Link } from '@heroui/link';
 import { Checkbox } from '@heroui/checkbox';
-import React from 'react';
+import { useState } from 'react';
 import {
   Modal,
   ModalContent,
@@ -10,6 +10,7 @@ import {
   ModalFooter,
 } from '@heroui/modal';
 import { Button } from '@heroui/button';
+import { CircularProgress, Spacer } from '@heroui/react';
 
 import {
   EyeFilledIcon,
@@ -17,6 +18,7 @@ import {
   LockIcon,
   MailIcon,
 } from '@/components/icons';
+import { useLogin } from '@/hooks/useLogin';
 
 interface LoginModalProps {
   children?: React.ReactNode;
@@ -52,43 +54,64 @@ interface LoginModalProps {
 }
 
 export default function LoginModal(props: LoginModalProps) {
-  const [isVisible, setIsVisible] = React.useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleUsername = (e: any) => {
+    setUsername(e);
+  };
+  const handlePassword = (e: any) => {
+    setPassword(e);
+  };
+  const loginMutation = useLogin();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginMutation.mutate({ username, password });
+  };
 
   return (
     <Modal
       backdrop='opaque'
-      className='max-w-6xl w-2xl max-h-screen h-96'
+      className='max-w-6xl w-2xl max-h-screen '
       classNames={{
         base: 'm-20',
+        header: 'border-b-0 text-center',
+        body: 'py-6',
+        footer: 'justify-center space-x-3',
+        closeButton: 'text-white/60 hover:text-white',
       }}
       isOpen={props.isOpen}
-      placement='top-center'
+      placement='center'
       onOpenChange={props.onOpenChange}
     >
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className='flex flex-col gap-1 text-2xl'>
+            <ModalHeader className='flex justify-center pb-0 text-2xl'>
               Đăng nhập
             </ModalHeader>
-            <ModalBody className='mt-3 mb-auto'>
+            <ModalBody className='space-y-1'>
               <Input
                 isClearable
                 isRequired
                 classNames={{
+                  base: 'w-full',
                   inputWrapper: 'p-5',
                   label: 'text-lg',
                 }}
-                label='Email'
+                label='Email or Username'
                 labelPlacement='outside'
-                placeholder='Nhập email của bạn'
+                placeholder='Nhập email hoặc username của bạn'
                 size='lg'
                 startContent={
                   <MailIcon className='text-2xl text-default-400 pointer-events-none shrink-0' />
                 }
                 variant='bordered'
+                onChange={(e) => handleUsername(e.target.value)}
               />
+              <Spacer y={4} />
               <Input
                 isRequired
                 classNames={{
@@ -118,7 +141,11 @@ export default function LoginModal(props: LoginModalProps) {
                 }
                 type={isVisible ? 'text' : 'password'}
                 variant='bordered'
+                onChange={(e) => {
+                  handlePassword(e.target.value);
+                }}
               />
+
               <div className='flex py-2 px-1 justify-between'>
                 <Checkbox
                   classNames={{
@@ -137,19 +164,20 @@ export default function LoginModal(props: LoginModalProps) {
               </div>
             </ModalBody>
             <ModalFooter>
-              <Button
-                color='danger'
-                variant='flat'
-                onPress={onClose}
-              >
-                Close
-              </Button>
-              <Button
-                color='primary'
-                onPress={onClose}
-              >
-                Đăng nhập
-              </Button>
+              <form onSubmit={handleSubmit}>
+                <Button
+                  className='w-xl'
+                  color='primary'
+                  disabled={loginMutation.isPending}
+                  type='submit'
+                >
+                  {loginMutation.isPending ? (
+                    <CircularProgress label='Đang đăng nhập...' />
+                  ) : (
+                    'Đăng nhập'
+                  )}
+                </Button>
+              </form>
             </ModalFooter>
           </>
         )}
