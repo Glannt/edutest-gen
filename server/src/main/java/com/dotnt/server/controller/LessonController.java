@@ -1,5 +1,6 @@
 package com.dotnt.server.controller;
 
+import com.dotnt.server.annotation.RestResponse;
 import com.dotnt.server.dto.LessonDto;
 import com.dotnt.server.dto.response.LessonResponse;
 import com.dotnt.server.service.LessonService;
@@ -12,35 +13,41 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/lessons")
+@RequestMapping("/lessons")
+@RestResponse
 @RequiredArgsConstructor
 public class LessonController {
     private final LessonService lessonService;
 
     @PostMapping
-    public ResponseEntity<LessonResponse> createLesson(@Valid @RequestBody LessonDto lessonDto) {
-        return new ResponseEntity<>(lessonService.create(lessonDto), HttpStatus.CREATED);
+    public LessonResponse createLesson(@Valid @RequestBody LessonDto lessonDto) {
+        return lessonService.create(lessonDto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LessonResponse> updateLesson(@PathVariable Long id,
+    public LessonResponse updateLesson(@PathVariable Long id,
                                                        @Valid @RequestBody LessonDto lessonDto) {
-        return ResponseEntity.ok(lessonService.update(id, lessonDto));
+        return lessonService.update(id, lessonDto);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LessonResponse> getLesson(@PathVariable Long id) {
-        return ResponseEntity.ok(lessonService.findById(id));
+    public LessonResponse getLesson(@PathVariable Long id) {
+        return lessonService.findById(id);
+    }
+
+    @GetMapping("/chapters/{chapterId}/lessons")
+    public List<LessonResponse> getLessonByChapterId(@PathVariable Long chapterId) {
+        return lessonService.findByChapterId(chapterId);
     }
 
     @GetMapping
-    public ResponseEntity<List<LessonResponse>> getAllLessons() {
-        return ResponseEntity.ok(lessonService.findAll());
+    public List<LessonResponse> getAllLessons() {
+        return lessonService.findAll();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLesson(@PathVariable Long id) {
+    public void deleteLesson(@PathVariable Long id) {
         lessonService.deleteById(id);
-        return ResponseEntity.noContent().build();
+
     }
 }

@@ -77,6 +77,14 @@ public class LessonServiceImpl implements LessonService {
         lessonRepository.deleteById(id);
     }
 
+    @Override
+    public List<LessonResponse> findByChapterId(Long chapterId) {
+
+        return lessonRepository.findByChapterId(chapterId).stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
     private LessonResponse convertToResponse(Lesson lesson) {
 
         return LessonResponse.builder()

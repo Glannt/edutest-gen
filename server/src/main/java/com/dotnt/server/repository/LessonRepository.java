@@ -16,4 +16,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
     List<Lesson> findByChapterIds(@Param("chapterIds") List<Long> chapterIds);
 
     boolean existsByNameAndChapterId(String name, Long chapterId);
+
+    @Query("SELECT l FROM Lesson l WHERE l.chapter.id = :chapterId")
+    List<Lesson> findByChapterId(@Param("chapterId") Long chapterId);
 }
