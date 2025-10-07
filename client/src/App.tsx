@@ -11,6 +11,7 @@ import LevelPage from '@/pages/level';
 import MatrixPage from '@/pages/matrix';
 import QuestionType from '@/pages/question-type';
 import ContentPage from '@/pages/content';
+import QuestionPage from '@/pages/question';
 
 function App() {
   return (
@@ -46,6 +47,10 @@ function App() {
         <Route
           element={<ContentPage />}
           path='content'
+        />
+        <Route
+          element={<QuestionPage />}
+          path='lesson'
         />
       </Route>
 

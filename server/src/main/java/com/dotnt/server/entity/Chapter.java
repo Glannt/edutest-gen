@@ -18,11 +18,6 @@ import java.util.Set;
 @SuperBuilder
 public class Chapter extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id", nullable = false)
-    @JsonBackReference
-    private Subject subject;
-
     @Column(nullable = false)
     private String name;
 
@@ -32,6 +27,10 @@ public class Chapter extends BaseEntity {
     @Column(name = "order_index", nullable = false)
     @Builder.Default
     private Integer orderIndex = 0;
+
+    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<GradeSubjectChapter> gradeSubjectChapters = new HashSet<>();
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

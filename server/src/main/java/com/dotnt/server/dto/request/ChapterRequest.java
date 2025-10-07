@@ -17,5 +17,5 @@ import java.util.List;
 public class ChapterRequest extends BaseDto {
     private String name;
     private String description;
-    private Long subjectId;
+    private Integer orderIndex;
 }

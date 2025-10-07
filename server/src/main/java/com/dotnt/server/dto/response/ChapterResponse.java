@@ -17,5 +17,6 @@ import java.util.List;
 public class ChapterResponse extends BaseDto {
     private String name;
     private String description;
+    private Integer orderIndex;
     private List<LessonResponse> lessons;
 }

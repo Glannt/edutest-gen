@@ -23,6 +23,8 @@ const navItems = [
   { name: 'Lớp', path: '/grade', icon: 'lucide:user' },
   { name: 'Bài học', path: '/lesson', icon: 'lucide:user' },
   { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:user' },
+  { name: 'Bài học', path: '/dashboard/lesson', icon: 'lucide:user' },
+  { name: 'Nội dung', path: '/dashboard/content', icon: 'lucide:user' },
   { name: 'Câu hỏi', path: '/question', icon: 'lucide:user' },
   { name: 'Bài thi', path: '/exam', icon: 'lucide:user' },
   { name: 'Settings', path: '/settings', icon: 'lucide:settings' },

@@ -207,6 +207,53 @@ export const TestMatrixDynamic = () => {
               </td>
             </tr>
           ))}
+          <tr>
+            <td
+              className='border border-table-border bg-table-header px-4 py-3 text-center font-bold text-table-header-foreground'
+              colSpan={2}
+            >
+              TỔNG
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              7
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              0
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              0
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              5
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              4
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              0
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              0
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              0
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
+              6
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold text-destructive'>
+              12
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold text-destructive'>
+              4
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold text-destructive'>
+              6
+            </td>
+            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold text-destructive'>
+              10
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>

@@ -17,10 +17,7 @@ import java.util.Set;
 @SuperBuilder
 public class Subject extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonBackReference
-    private User user;
+
 
     @Column(nullable = false)
     private String name;
@@ -28,16 +25,8 @@ public class Subject extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<Chapter> chapters = new HashSet<>();
-
-    @ManyToMany
-    @JoinTable(
-            name = "subject_grade", // Tên bảng trung gian
-            joinColumns = @JoinColumn(name = "subject_id"), // Khóa ngoại liên kết với Subject
-            inverseJoinColumns = @JoinColumn(name = "grade_id") // Khóa ngoại liên kết với Grade
-    )
-    @Builder.Default
-    private Set<Grade> grades = new HashSet<>();
+    private Set<GradeSubject> gradeSubjects = new HashSet<>();
 }

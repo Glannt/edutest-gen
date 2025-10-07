@@ -11,6 +11,6 @@ public interface UserService {
     List<User> findAll();
     void deleteById(Long id);
     User update(User user);
-    User findByUsername(String username);
+    User findByUsernameOrEmail(String username);
     User register(RegisterRequest request);
 }

@@ -3,9 +3,13 @@ package com.dotnt.server.service.impl;
 import com.dotnt.server.dto.GradeDto;
 import com.dotnt.server.dto.response.GradeResponse;
 import com.dotnt.server.entity.Grade;
+import com.dotnt.server.entity.User;
 import com.dotnt.server.repository.GradeRepository;
 import com.dotnt.server.repository.LessonRepository;
+import com.dotnt.server.repository.UserRepository;
 import com.dotnt.server.service.GradeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,20 +17,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class GradeServiceImpl implements GradeService {
     private final GradeRepository gradeRepository;
     private final LessonRepository lessonRepository;
+    private final UserRepository userRepository;
 
-
-    public GradeServiceImpl(GradeRepository gradeRepository, LessonRepository lessonRepository) {
-        this.gradeRepository = gradeRepository;
-        this.lessonRepository = lessonRepository;
-
-    }
 
     @Override
     @Transactional
     public GradeResponse create(GradeDto gradeDto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         // Check if grade with same name already exists
         if (gradeRepository.existsByName(gradeDto.getName())) {
             throw new RuntimeException("Grade with this name already exists");
@@ -35,13 +38,10 @@ public class GradeServiceImpl implements GradeService {
         Grade grade = Grade.builder()
                 .name(gradeDto.getName())
                 .description(gradeDto.getDescription())
+                .created_by(user.getFullName())
                 .build();
 
         Grade savedGrade = gradeRepository.save(grade);
-
-        // Handle lesson associations if present
-
-
         return convertToResponse(savedGrade);
     }
 

@@ -1,5 +1,6 @@
 package com.dotnt.server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,7 +25,9 @@ public class Grade extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToMany(mappedBy = "grades")
+    private String created_by;
+
+    @OneToMany(mappedBy = "grade", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<Subject> subjects = new HashSet<>();
+    private Set<GradeSubject> gradeSubjects = new HashSet<>();
 }

@@ -20,7 +20,5 @@ public class SubjectDto extends BaseDto {
 
     private String description;
 
-    @JsonProperty("user_id")
-    private Long userId;
 
 }

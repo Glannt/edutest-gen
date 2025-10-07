@@ -4,12 +4,16 @@ package com.dotnt.server.service.impl;
 import com.dotnt.server.dto.SubjectDto;
 import com.dotnt.server.dto.response.ChapterResponse;
 import com.dotnt.server.entity.Grade;
+import com.dotnt.server.entity.GradeSubject;
 import com.dotnt.server.entity.Subject;
+import com.dotnt.server.entity.User;
 import com.dotnt.server.repository.GradeRepository;
+import com.dotnt.server.repository.GradeSubjectRepository;
 import com.dotnt.server.repository.SubjectRepository;
 import com.dotnt.server.repository.UserRepository;
 import com.dotnt.server.service.SubjectService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,9 +26,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SubjectServiceImpl implements SubjectService {
     private final SubjectRepository subjectRepository;
-    private final UserRepository userRepository;
     private final GradeRepository gradeRepository;
-
+    private final GradeSubjectRepository gradeSubjectRepository;
     @Override
     @Transactional
     public SubjectDto create(SubjectDto subjectDto) {
@@ -32,11 +35,11 @@ public class SubjectServiceImpl implements SubjectService {
             throw new RuntimeException("Subject with this name already exists");
         }
 
+
+
         Subject subject = Subject.builder()
                 .name(subjectDto.getName())
                 .description(subjectDto.getDescription())
-                .user(userRepository.findById(subjectDto.getUserId())
-                        .orElseThrow(() -> new RuntimeException("User not found")))
                 .build();
 
         Subject savedSubject = subjectRepository.save(subject);
@@ -112,7 +115,16 @@ public class SubjectServiceImpl implements SubjectService {
         Grade grade = gradeRepository.findById(gradeId)
                 .orElseThrow(() -> new RuntimeException("Grade not found"));
 
-        subject.getGrades().add(grade); // Hibernate tự quản lý bảng trung gian
+        // Kiểm tra đã tồn tại chưa
+        boolean exists = gradeSubjectRepository.existsByGradeAndSubject(grade, subject);
+        if (exists) {
+            throw new IllegalStateException("Grade already assigned to Subject");
+        }
+
+        GradeSubject gradeSubject = GradeSubject.builder()
+                .grade(grade)
+                .subject(subject)
+                .build();
         return subjectRepository.save(subject);
     }
 
@@ -125,7 +137,7 @@ public class SubjectServiceImpl implements SubjectService {
         Grade grade = gradeRepository.findById(gradeId)
                 .orElseThrow(() -> new RuntimeException("Grade not found"));
 
-        subject.getGrades().remove(grade);
+        gradeSubjectRepository.deleteByGradeAndSubject(grade, subject);
         return subjectRepository.save(subject);
     }
 
@@ -133,8 +145,9 @@ public class SubjectServiceImpl implements SubjectService {
     @Override
     @Transactional(readOnly = true)
     public Set<Grade> getGradesOfSubject(Long subjectId) {
-        Subject subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new RuntimeException("Subject not found"));
-        return subject.getGrades();
+        List<GradeSubject> gradeSubjects = gradeSubjectRepository.findBySubjectId(subjectId);
+        return gradeSubjects.stream()
+                .map(GradeSubject::getGrade)
+                .collect(Collectors.toSet());
     }
 }

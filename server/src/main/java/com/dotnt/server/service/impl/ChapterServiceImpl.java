@@ -23,14 +23,15 @@ public class ChapterServiceImpl implements ChapterService{
         Chapter chapterSaved = chapterRepository.save(Chapter.builder()
                 .name(chapter.getName())
                 .description(chapter.getDescription())
-                        .subject(subjectRepository.findById(chapter.getSubjectId())
-                                .orElseThrow(() -> new RuntimeException("Subject not found")))
+                .orderIndex(chapter.getOrderIndex() != null ? chapter.getOrderIndex() : 0)
                 .build());
 
         return ChapterResponse.builder()
+                .id(chapterSaved.getId())
                 .name(chapterSaved.getName())
                 .description(chapterSaved.getDescription())
-                .build() ;
+                .orderIndex(chapterSaved.getOrderIndex())
+                .build();
     }
 
     @Override

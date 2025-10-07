@@ -56,9 +56,13 @@ public class AuthController {
         // Get user info
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
+        User user = userService.findByUsernameOrEmail(userDetails.getUsername());
+
         return LoginResponse.builder()
                 .token(token)
-                .username(userDetails.getUsername())
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
                 .role(userDetails.getRole())
                 .build();
     }
@@ -71,9 +75,13 @@ public class AuthController {
             return null;
         }
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        User user = userService.findByUsernameOrEmail(userDetails.getUsername());
+
         return LoginResponse.builder()
                 .token(null)
-                .username(userDetails.getUsername())
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
                 .role(userDetails.getRole())
                 .build();
     }
@@ -103,7 +111,9 @@ public class AuthController {
         // 4. Trả về token và thông tin user
         return  LoginResponse.builder()
                 .token(token)
-                .username(userDetails.getUsername())
+                .userId(newUser.getId())
+                .email(newUser.getEmail())
+                .username(newUser.getUsername())
                 .role(userDetails.getRole())
                 .build();
     }
