@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useQueries,
+} from '@tanstack/react-query';
 
 import { questionService } from '@/service/question.service';
 import { QuestionPayload } from '@/types/question';
@@ -71,4 +76,29 @@ export const useDeleteQuestion = () => {
       queryClient.invalidateQueries({ queryKey: ['questions'] });
     },
   });
+};
+/** Fetch question theo lessonId */
+export const fetchQuestionsByLesson = (lessonId: number) =>
+  questionService.getByLessonId(lessonId);
+export const useQuestionsByLesson = (lessonId?: number) => {
+  return useQuery<QuestionPayload[]>({
+    queryKey: ['questions', 'lesson', lessonId],
+    queryFn: () => fetchQuestionsByLesson(lessonId!), // gọi API riêng
+    enabled: !!lessonId,
+  });
+};
+
+export const useQuestionsByMatrix = (lessonIds: number[] = []) => {
+  const queries = useQueries({
+    queries: lessonIds.map((lessonId) => ({
+      queryKey: ['questions', 'lesson', lessonId],
+      queryFn: () => fetchQuestionsByLesson(lessonId!), // gọi API trực tiếp, không dùng hook
+      enabled: !!lessonId,
+    })),
+  });
+
+  const isLoading = queries.some((q) => q.isLoading);
+  const data = queries.flatMap((q) => q.data ?? []);
+
+  return { data, isLoading };
 };

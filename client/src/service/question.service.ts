@@ -17,6 +17,14 @@ export const questionService = {
     return res.data.data ?? res.data;
   },
 
+  async getByLessonId(lessonId: number): Promise<QuestionPayload[]> {
+    const res = await http.get<ApiResponse<QuestionPayload[]>>(
+      `/questions/lessons/${lessonId}/questions`
+    );
+
+    return res.data.data ?? res.data;
+  },
+
   async create(payload: Partial<QuestionPayload>): Promise<QuestionPayload> {
     const res = await http.post<ApiResponse<QuestionPayload>>(
       '/questions',

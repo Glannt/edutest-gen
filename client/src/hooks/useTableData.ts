@@ -2,10 +2,6 @@ import { Selection, SortDescriptor } from '@react-types/shared';
 import React from 'react';
 
 import { StatusOptions } from '@/interface/status-option.interface';
-import { useMatrixStore } from '@/store/matrix.store';
-import { TableDataMatrix } from '@/interface/table-data-matrix.interface';
-import { useLevels } from '@/hooks/useLevels';
-import { useQuestionTypes } from '@/store/useQuestionTypeStore';
 export interface UseTableDataProps<T> {
   data: T[];
   columns: { name: string; uid: string; sortable?: boolean }[];
@@ -95,104 +91,104 @@ export function useTableData<T extends Record<string, any>>(
   };
 }
 
-export const useTableDataMatrix = () => {
-  const structures = useMatrixStore((s) => s.structures);
+// export const useTableDataMatrix = () => {
+//   const structures = useMatrixStore((s) => s.structures);
 
-  // Lấy levels và questionTypes từ backend
-  const { data: levelsData = [] } = useLevels();
-  const { data: questionTypesData = [] } = useQuestionTypes();
+//   // Lấy levels và questionTypes từ backend
+//   const { data: levelsData = [] } = useLevels();
+//   const { data: questionTypesData = [] } = useQuestionTypes();
 
-  console.log(questionTypesData);
+//   console.log(questionTypesData);
 
-  // Map ra danh sách string để làm header dynamic
-  const levels = levelsData.map((l: any) => l.name);
-  const questionTypes = questionTypesData.map((qt: any) => qt.name);
+//   // Map ra danh sách string để làm header dynamic
+//   const levels = levelsData.map((l: any) => l.name);
+//   const questionTypes = questionTypesData.map((qt: any) => qt.name);
 
-  // Lấy danh sách subjects từ structures
-  const subjectsSet = new Set<string>();
+//   // Lấy danh sách subjects từ structures
+//   const subjectsSet = new Set<string>();
 
-  structures.forEach((item) => subjectsSet.add(item.subject));
-  const subjects = Array.from(subjectsSet);
+//   structures.forEach((item) => subjectsSet.add(item.subject));
+//   const subjects = Array.from(subjectsSet);
 
-  // Tổng theo level/questionType
-  const totalLevelCounts: Record<string, Record<string, number>> = {};
+//   // Tổng theo level/questionType
+//   const totalLevelCounts: Record<string, Record<string, number>> = {};
 
-  levels.forEach((level: any) => {
-    totalLevelCounts[level] = {};
-    questionTypes.forEach((qt) => (totalLevelCounts[level][qt] = 0));
-  });
+//   levels.forEach((level: any) => {
+//     totalLevelCounts[level] = {};
+//     questionTypes.forEach((qt) => (totalLevelCounts[level][qt] = 0));
+//   });
 
-  // Tổng theo subject
-  const totalSubjectCounts: Record<string, number> = {};
+//   // Tổng theo subject
+//   const totalSubjectCounts: Record<string, number> = {};
 
-  subjects.forEach((sub) => (totalSubjectCounts[sub] = 0));
+//   subjects.forEach((sub) => (totalSubjectCounts[sub] = 0));
 
-  let totalScore = 0;
+//   let totalScore = 0;
 
-  // Gom theo chapter
-  const chapterMap = new Map<string, typeof structures>();
+//   // Gom theo chapter
+//   const chapterMap = new Map<string, typeof structures>();
 
-  structures.forEach((item) => {
-    if (!chapterMap.has(item.chapter)) chapterMap.set(item.chapter, []);
-    chapterMap.get(item.chapter)!.push(item);
-  });
+//   structures.forEach((item) => {
+//     if (!chapterMap.has(item.chapter)) chapterMap.set(item.chapter, []);
+//     chapterMap.get(item.chapter)!.push(item);
+//   });
 
-  const tableData: TableDataMatrix[] = [];
+//   const tableData: TableDataMatrix[] = [];
 
-  chapterMap.forEach((lessons, chapterName) => {
-    lessons.forEach((lesson, idx) => {
-      const row: TableDataMatrix = {
-        chapter: idx === 0 ? chapterName : '',
-        content: lesson.lesson,
-        isSubRow: idx !== 0,
-        rowSpan: idx === 0 ? lessons.length : undefined,
-      };
+//   chapterMap.forEach((lessons, chapterName) => {
+//     lessons.forEach((lesson, idx) => {
+//       const row: TableDataMatrix = {
+//         chapter: idx === 0 ? chapterName : '',
+//         content: lesson.lesson,
+//         isSubRow: idx !== 0,
+//         rowSpan: idx === 0 ? lessons.length : undefined,
+//       };
 
-      // Gán dynamic level/questionType nếu tồn tại trong danh sách backend
-      if (
-        levels.includes(lesson.level) &&
-        questionTypes.includes(lesson.questionType)
-      ) {
-        row[`${lesson.level}_${lesson.questionType}`] = lesson.questionCount;
-        totalLevelCounts[lesson.level][lesson.questionType] +=
-          lesson.questionCount;
-      }
+//       // Gán dynamic level/questionType nếu tồn tại trong danh sách backend
+//       if (
+//         levels.includes(lesson.level) &&
+//         questionTypes.includes(lesson.questionType)
+//       ) {
+//         row[`${lesson.level}_${lesson.questionType}`] = lesson.questionCount;
+//         totalLevelCounts[lesson.level][lesson.questionType] +=
+//           lesson.questionCount;
+//       }
 
-      // Gán dynamic subject
-      row[lesson.subject] = lesson.questionCount;
-      totalSubjectCounts[lesson.subject] += lesson.questionCount;
+//       // Gán dynamic subject
+//       row[lesson.subject] = lesson.questionCount;
+//       totalSubjectCounts[lesson.subject] += lesson.questionCount;
 
-      // Tổng cho dòng
-      row.totalScore = lesson.questionCount;
-      totalScore += lesson.questionCount;
+//       // Tổng cho dòng
+//       row.totalScore = lesson.questionCount;
+//       totalScore += lesson.questionCount;
 
-      tableData.push(row);
-    });
-  });
+//       tableData.push(row);
+//     });
+//   });
 
-  // Tổng cuối bảng
-  const totalRow: TableDataMatrix = {
-    chapter: '',
-    content: 'TỔNG',
-    isSubRow: false,
-  };
+//   // Tổng cuối bảng
+//   const totalRow: TableDataMatrix = {
+//     chapter: '',
+//     content: 'TỔNG',
+//     isSubRow: false,
+//   };
 
-  levels.forEach((level) => {
-    questionTypes.forEach((qt) => {
-      totalRow[`${level}_${qt}`] = totalLevelCounts[level][qt];
-    });
-  });
+//   levels.forEach((level) => {
+//     questionTypes.forEach((qt) => {
+//       totalRow[`${level}_${qt}`] = totalLevelCounts[level][qt];
+//     });
+//   });
 
-  subjects.forEach((sub) => {
-    totalRow[sub] = totalSubjectCounts[sub];
-  });
+//   subjects.forEach((sub) => {
+//     totalRow[sub] = totalSubjectCounts[sub];
+//   });
 
-  totalRow.totalScore = totalScore;
+//   totalRow.totalScore = totalScore;
 
-  return {
-    tableData,
-    levels,
-    questionTypes,
-    subjects,
-  };
-};
+//   return {
+//     tableData,
+//     levels,
+//     questionTypes,
+//     subjects,
+//   };
+// };

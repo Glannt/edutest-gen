@@ -9,7 +9,6 @@ import { BasePayload, GenericCard } from '@/components/content/generic-card';
 import { useSubjectsByGrade } from '@/hooks/useGradeSubject';
 import { useSubjects } from '@/hooks/useSubjects';
 import { SubjectPayload } from '@/types/subject';
-import { ContributeModal } from '@/components/content/contribute-modal';
 export const ContentComponent: React.FC = () => {
   const [selected, setSelected] = useState<string | number>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -256,11 +255,11 @@ export const ContentComponent: React.FC = () => {
           </div>
         </main>
       </div>
-      <ContributeModal
+      {/* <ContributeModal
         isOpen={isContributeModalOpen}
         onClose={() => setIsContributeModalOpen(false)}
         onCreateQuestion={() => {}}
-      />
+      /> */}
     </div>
   );
 };

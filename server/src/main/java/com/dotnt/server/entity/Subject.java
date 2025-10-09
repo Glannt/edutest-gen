@@ -9,7 +9,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "subjects")
+@Table(
+        name = "subjects",
+        indexes = {
+                @Index(name = "idx_subject_name", columnList = "name")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor

@@ -11,5 +11,6 @@ public class MatrixDetailRequest {
     private Long matrixId;
     private Long levelId;
     private Long lessonId;
+    private Long questionTypeId;
     private Integer quantity;
 }

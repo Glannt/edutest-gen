@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,6 +62,14 @@ public class QuestionServiceImpl implements QuestionService {
          questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Question ID cannot be null for update"));
         return this.toResponse(questionRepository.save(this.toEntity(questiondto)));
+    }
+
+    @Override
+    public List<QuestionResponse> findByLessonId(Long lessonId) {
+        return questionRepository.findByLessonId(lessonId)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -131,23 +140,35 @@ public class QuestionServiceImpl implements QuestionService {
                 .build();
     }
     private Question toEntity(QuestionDto questionDto) {
-        return Question.builder()
+        // 1️⃣ Tạo entity Question trước
+        Question question = Question.builder()
                 .id(questionDto.getId())
                 .content(questionDto.getContent())
-                .options(questionDto.getOptions().stream()
-                        .map(optionDto -> Option.builder()
-                                .id(optionDto.getId())
-                                .content(optionDto.getContent())
-                                .isCorrect(optionDto.getIsCorrect())
-                                .build())
-                        .collect(Collectors.toSet()))
+                .explanation(questionDto.getExplanation())
                 .lesson(lessonRepository.findById(questionDto.getLessonId())
                         .orElseThrow(() -> new RuntimeException("Lesson not found")))
                 .questionType(questionTypeRepository.findById(questionDto.getQuestionTypeId())
                         .orElseThrow(() -> new RuntimeException("Question Type not found")))
                 .level(levelRepository.findById(questionDto.getLevelId())
                         .orElseThrow(() -> new RuntimeException("Level not found")))
-                .explanation(questionDto.getExplanation())
                 .build();
+
+        // 2️⃣ Gán options và liên kết ngược lại (Option → Question)
+        if (questionDto.getOptions() != null && !questionDto.getOptions().isEmpty()) {
+            Set<Option> options = questionDto.getOptions().stream()
+                    .map(optionDto -> {
+                        Option option = Option.builder()
+                                .content(optionDto.getContent())
+                                .isCorrect(optionDto.getIsCorrect())
+                                .orderIndex(optionDto.getOrderIndex())
+                                .question(question) // 🔥 Quan trọng nhất
+                                .build();
+                        return option;
+                    })
+                    .collect(Collectors.toSet());
+            question.setOptions(options);
+        }
+
+        return question;
     }
 }

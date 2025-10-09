@@ -28,6 +28,10 @@ public class Exam extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "duration_minutes")
+    @Builder.Default
+    private Integer durationMinutes = 60;
+
     @Column(name = "start_time")
     private LocalDateTime startTime;
 

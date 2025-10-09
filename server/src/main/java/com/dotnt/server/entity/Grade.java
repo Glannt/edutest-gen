@@ -8,12 +8,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "grades")
+@Table(
+        name = "grades",
+        indexes = {
+                @Index(name = "idx_grade_name", columnList = "name")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class Grade extends BaseEntity {
 
     @Column(nullable = false, length = 100)

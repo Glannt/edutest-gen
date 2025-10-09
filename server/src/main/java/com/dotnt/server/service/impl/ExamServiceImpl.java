@@ -1,12 +1,13 @@
 package com.dotnt.server.service.impl;
 
+import com.dotnt.server.dto.OptionDto;
+import com.dotnt.server.dto.request.AutoGenerateExamListRequest;
+import com.dotnt.server.dto.request.AutoGenerateExamRequest;
 import com.dotnt.server.dto.request.CreateExamRequest;
 import com.dotnt.server.dto.request.ExamQuestionRequest;
 import com.dotnt.server.dto.response.ExamQuestionResponse;
 import com.dotnt.server.dto.response.ExamResponse;
-import com.dotnt.server.entity.Exam;
-import com.dotnt.server.entity.ExamQuestion;
-import com.dotnt.server.entity.Question;
+import com.dotnt.server.entity.*;
 import com.dotnt.server.repository.ExamQuestionRepository;
 import com.dotnt.server.repository.ExamRepository;
 import com.dotnt.server.repository.MatrixRepository;
@@ -18,10 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,7 +88,7 @@ public class ExamServiceImpl implements ExamService {
         exam.setEndTime(request.getEndTime());
 
         // Xóa examQuestion cũ
-        exam.getExamQuestions().clear();
+        examQuestionRepository.deleteByExamId(examId);
 
         List<ExamQuestionRequest> questions = request.getQuestions();
         if (request.isShuffleQuestions()) {
@@ -147,12 +145,132 @@ public class ExamServiceImpl implements ExamService {
                 });
     }
 
+    @Override
+    @Transactional
+    public ExamResponse autoGenerateExam(AutoGenerateExamRequest request) {
+        // 1️⃣ Lấy matrix
+        Matrix matrix = matrixRepository.findById(request.getMatrixId())
+                .orElseThrow(() -> new RuntimeException("Matrix not found"));
+
+        // 2️⃣ Lấy danh sách câu hỏi khả dụng theo matrix
+        List<Question> availableQuestions = questionRepository.findByMatrixIncludeLevel(matrix);
+        if (availableQuestions.isEmpty()) {
+            throw new RuntimeException("No questions found for matrix");
+        }
+
+        // 3️⃣ Random chọn số lượng câu hỏi yêu cầu
+        Collections.shuffle(availableQuestions);
+        List<Question> selectedQuestions = availableQuestions.stream()
+                .limit(request.getNumberOfQuestions())
+                .collect(Collectors.toList());
+
+        // 4️⃣ Shuffle thứ tự câu hỏi nếu bật
+        if (request.isShuffleQuestions()) {
+            Collections.shuffle(selectedQuestions);
+        }
+
+        // 5️⃣ Tạo exam
+        Exam exam = Exam.builder()
+                .code(request.getCode())
+                .name(request.getName())
+                .matrix(matrix)
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .build();
+
+        Set<ExamQuestion> examQuestions = new HashSet<>();
+        for (Question q : selectedQuestions) {
+            ExamQuestion eq = ExamQuestion.builder()
+                    .exam(exam)
+                    .question(q)
+                    .finalPoints(q.getLevel().getPoints())
+                    .build();
+            examQuestions.add(eq);
+        }
+        exam.setExamQuestions(examQuestions);
+
+        examRepository.save(exam);
+
+        // 6️⃣ Map sang response và shuffle options
+        return mapToResponseWithOptions(exam, request.isShuffleOptions());
+    }
+
+    @Override
+    @Transactional
+    public List<ExamResponse> autoGenerateExamList(AutoGenerateExamListRequest request) {
+        List<ExamResponse> responses = new ArrayList<>();
+
+        for (int i = 1; i <= request.getNumberOfExams(); i++) {
+            // Sinh mã đề duy nhất
+            String generatedCode = String.format("%s_%02d", request.getBaseCode(), i);
+
+            // Dùng lại AutoGenerateExamRequest để tận dụng logic có sẵn
+            AutoGenerateExamRequest singleExamReq = AutoGenerateExamRequest.builder()
+                    .code(generatedCode)
+                    .name(request.getName() + " - Mã " + i)
+                    .matrixId(request.getMatrixId())
+                    .numberOfQuestions(request.getNumberOfQuestions())
+                    .shuffleQuestions(request.isShuffleQuestions())
+                    .shuffleOptions(request.isShuffleOptions())
+                    .startTime(request.getStartTime())
+                    .endTime(request.getEndTime())
+                    .build();
+
+            // Gọi lại logic autoGenerateExam() sẵn có
+            ExamResponse examResponse = autoGenerateExam(singleExamReq);
+            responses.add(examResponse);
+        }
+
+        return responses;
+    }
+
+
+    private ExamResponse mapToResponseWithOptions(Exam exam, boolean shuffleOptions) {
+        List<ExamQuestionResponse> questionResponses = exam.getExamQuestions().stream()
+                .map(eq -> {
+                    Question q = eq.getQuestion();
+
+                    // Copy danh sách options và shuffle nếu cần
+                    List<Option> options = new ArrayList<>(q.getOptions());
+                    if (shuffleOptions) {
+                        Collections.shuffle(options);
+                    }
+
+                    List<OptionDto> optionDtos = options.stream()
+                            .map(opt -> OptionDto.builder()
+                                    .id(opt.getId())
+                                    .content(opt.getContent())
+                                    .isCorrect(opt.getIsCorrect())
+                                    .orderIndex(opt.getOrderIndex())
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    return ExamQuestionResponse.builder()
+                            .questionId(q.getId())
+                            .content(q.getContent())
+                            .finalPoints(eq.getFinalPoints())
+                            .options(optionDtos)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return ExamResponse.builder()
+                .code(exam.getCode())
+                .name(exam.getName())
+                .startTime(exam.getStartTime())
+                .endTime(exam.getEndTime())
+                .questions(questionResponses)
+                .build();
+    }
+
     private ExamResponse mapToResponse(Exam exam) {
         List<ExamQuestionResponse> questionResponses = exam.getExamQuestions().stream()
-                .map(eq -> new ExamQuestionResponse(eq.getQuestion().getId(),
-                        eq.getQuestion().getContent(),
-                        eq.getFinalPoints()))
-                .toList();
+                .map(eq -> ExamQuestionResponse.builder()
+                        .questionId(eq.getQuestion().getId())
+                        .finalPoints(eq.getQuestion().getLevel().getPoints())
+                        .content(eq.getQuestion().getContent())
+                        .build())
+                .collect(Collectors.toList());
 
         return ExamResponse.builder()
                 .id(exam.getId())

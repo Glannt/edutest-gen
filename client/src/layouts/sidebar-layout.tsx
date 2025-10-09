@@ -7,35 +7,47 @@ import {
   DrawerFooter,
 } from '@heroui/drawer';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Avatar, Badge, Button } from '@heroui/react';
+import { Icon } from '@iconify/react';
 
 import { ThemeSwitch } from '@/components/theme-switch';
+import { useAuthStore } from '@/store/auth.store';
+import { siteConfig } from '@/config/site';
 
 // Define navigation items
-const navItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: 'lucide:layout-dashboard' },
-  { name: 'Độ khó', path: '/dashboard/level', icon: 'lucide:user' },
-  { name: 'Môn học', path: '/dashboard/subject', icon: 'lucide:user' },
-  {
-    name: 'Loại câu hỏi',
-    path: '/dashboard/question-type',
-    icon: 'lucide:user',
-  },
-  { name: 'Lớp', path: '/grade', icon: 'lucide:user' },
-  { name: 'Bài học', path: '/lesson', icon: 'lucide:user' },
-  { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:user' },
-  { name: 'Bài học', path: '/dashboard/lesson', icon: 'lucide:user' },
-  { name: 'Nội dung', path: '/dashboard/content', icon: 'lucide:user' },
-  { name: 'Câu hỏi', path: '/question', icon: 'lucide:user' },
-  { name: 'Bài thi', path: '/exam', icon: 'lucide:user' },
-  { name: 'Settings', path: '/settings', icon: 'lucide:settings' },
-  { name: 'Analytics', path: '/analytics', icon: 'lucide:bar-chart' },
-];
+// const navItems = [
+//   { name: 'Dashboard', path: '/dashboard', icon: 'lucide:layout-dashboard' },
+//   { name: 'Độ khó', path: '/dashboard/level', icon: 'lucide:user' },
+//   { name: 'Môn học', path: '/dashboard/subject', icon: 'lucide:user' },
+//   {
+//     name: 'Loại câu hỏi',
+//     path: '/dashboard/question-type',
+//     icon: 'lucide:user',
+//   },
+//   { name: 'Lớp', path: '/grade', icon: 'lucide:user' },
+//   { name: 'Bài học', path: '/lesson', icon: 'lucide:user' },
+//   { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:user' },
+//   { name: 'Bài học', path: '/dashboard/lesson', icon: 'lucide:user' },
+//   { name: 'Nội dung', path: '/dashboard/content', icon: 'lucide:user' },
+//   { name: 'Câu hỏi', path: '/question', icon: 'lucide:user' },
+//   { name: 'Bài thi', path: '/exam', icon: 'lucide:user' },
+//   { name: 'Settings', path: '/settings', icon: 'lucide:settings' },
+//   { name: 'Analytics', path: '/analytics', icon: 'lucide:bar-chart' },
+// ];
 
 export default function SidebarLayout() {
   const location = useLocation();
   const [isHover, setIsHover] = React.useState(false);
   const [isOpen, setIsOpen] = React.useState(true);
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+  // ✅ Lấy thông tin user từ Zustand
+  const user = useAuthStore((state) => state.user);
+
+  type Role = keyof typeof siteConfig.NAV_CONFIG;
+  const role = (user?.role as Role) ?? 'TEACHER';
+
+  // ✅ Lấy danh sách nav theo role
+  const navItems = siteConfig.NAV_CONFIG[role];
 
   // Handle responsive behavior
   React.useEffect(() => {
@@ -114,7 +126,7 @@ export default function SidebarLayout() {
               </DrawerHeader>
               <DrawerBody className='p-0'>
                 <nav className='flex flex-col py-4'>
-                  {navItems.map((item) => (
+                  {navItems.map((item: any) => (
                     <NavLink
                       key={item.path}
                       className={({ isActive }) =>
@@ -138,8 +150,30 @@ export default function SidebarLayout() {
                 </nav>
               </DrawerBody>
               <DrawerFooter className='h-24'>
-                <div className='w-full border-t border-divider py-3'>
+                <div className='w-full border-t border-divider py-3 flex justify-around'>
                   <ThemeSwitch />
+                  <Badge
+                    color='danger'
+                    content=''
+                    placement='top-right'
+                    shape='circle'
+                  >
+                    <Button
+                      isIconOnly
+                      variant='light'
+                    >
+                      <Icon
+                        className='text-xl'
+                        icon='lucide:bell'
+                      />
+                    </Button>
+                  </Badge>
+
+                  <Avatar
+                    name='Thanh'
+                    size='sm'
+                    src='https://img.heroui.chat/image/avatar?w=40&h=40&u=user1'
+                  />
                 </div>
               </DrawerFooter>
             </>

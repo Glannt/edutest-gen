@@ -33,9 +33,6 @@ public class Matrix extends BaseEntity {
     @Builder.Default
     private Integer totalQuestions = 0;
 
-    @Column(name = "duration_minutes", nullable = false)
-    @Builder.Default
-    private Integer durationMinutes = 60;
 
     @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

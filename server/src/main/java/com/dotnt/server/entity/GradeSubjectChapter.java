@@ -7,7 +7,12 @@ import lombok.experimental.SuperBuilder;
 @Entity
 @Table(
         name = "grade_subject_chapter",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"grade_subject_id", "chapter_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"grade_subject_id", "chapter_id"}),
+        indexes = {
+                @Index(name = "idx_gsc_grade_subject", columnList = "grade_subject_id"),
+                @Index(name = "idx_gsc_chapter", columnList = "chapter_id"),
+                @Index(name = "idx_gsc_order", columnList = "order_index")
+        }
 )
 @Getter
 @Setter

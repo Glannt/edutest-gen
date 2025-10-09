@@ -16,7 +16,7 @@ interface DynamicSidebarProps {
   onChapterSelect: (chapterId: number) => void;
 }
 
-export const QuestionSidebar: React.FC<DynamicSidebarProps> = ({
+export const LessonSidebar: React.FC<DynamicSidebarProps> = ({
   selectedGradeId,
   subjects,
   isLoading,

@@ -10,7 +10,11 @@ import java.util.Set;
 @Entity
 @Table(
         name = "grade_subject",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"grade_id", "subject_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"grade_id", "subject_id"}),
+        indexes = {
+                @Index(name = "idx_grade_subject_grade", columnList = "grade_id"),
+                @Index(name = "idx_grade_subject_subject", columnList = "subject_id")
+        }
 )
 @Getter
 @Setter

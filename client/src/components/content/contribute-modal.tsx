@@ -8,25 +8,41 @@ import {
   Spinner,
 } from '@heroui/react';
 import { Icon } from '@iconify/react';
+import { useNavigate } from 'react-router-dom';
 
 import { useGrades } from '@/hooks/useGrades';
 import { useSubjects } from '@/hooks/useSubjects';
+import { useChaptersByGradeAndSubject } from '@/hooks/useGradeSubject';
+import { useLessonsByChapter } from '@/hooks/useLesson';
+import { LessonPayload } from '@/types/lesson';
+import { ChapterPayload } from '@/service/grade-subject.service';
 
 interface ContributeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateQuestion: (gradeId: number, subjectId: number) => void;
+  showLessonSelect: boolean;
+  onCreateQuestion?: () => void | undefined;
 }
 
 export const ContributeModal: React.FC<ContributeModalProps> = ({
   isOpen,
   onClose,
+  showLessonSelect,
   onCreateQuestion,
 }) => {
+  const navigate = useNavigate();
   const { data: grades, isLoading: gradesLoading } = useGrades();
   const { data: subjects, isLoading: subjectsLoading } = useSubjects();
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<number | null>(null);
+
+  const { data: chapters } = useChaptersByGradeAndSubject(
+    selectedGrade || undefined,
+    selectedSubject || undefined
+  );
+  const { data: lessons } = useLessonsByChapter(selectedChapter || undefined);
 
   // Khi grades loaded, chọn mặc định phần tử đầu tiên
   useEffect(() => {
@@ -41,6 +57,17 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
       setSelectedSubject(subjects[0].id);
     }
   }, [subjects, selectedSubject]);
+
+  const handleCreateQuestion = () => {
+    if (selectedGrade && selectedSubject && selectedChapter && selectedLesson) {
+      navigate(
+        `/dashboard/question/create?gradeId=${selectedGrade}&subjectId=${selectedSubject}&chapterId=${selectedChapter}&lessonId=${selectedLesson}`
+      );
+      onClose(); // đóng modal sau khi chuyển trang
+    } else {
+      console.warn('Missing selection');
+    }
+  };
 
   return (
     <Modal
@@ -120,21 +147,97 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   )}
                 </div>
 
-                {/* Button tạo câu hỏi */}
-                <div>
-                  <Button
-                    color='primary'
-                    startContent={<Icon icon='lucide:plus' />}
-                    variant='solid'
-                    onPress={() => {
-                      if (selectedGrade && selectedSubject) {
-                        onCreateQuestion(selectedGrade, selectedSubject);
-                      }
-                    }}
-                  >
-                    Tạo câu hỏi mới
-                  </Button>
-                </div>
+                {/* Chapter selection */}
+                {showLessonSelect ? (
+                  <>
+                    <div>
+                      <p className='mb-2 font-medium'>Chọn chương</p>
+                      <div className='flex flex-wrap gap-2'>
+                        {chapters?.map((c: ChapterPayload) => (
+                          <Button
+                            key={c.id}
+                            className={`border border-default-200 ${
+                              selectedChapter === c.id
+                                ? 'bg-primary text-white'
+                                : 'bg-default-50'
+                            }`}
+                            radius='sm'
+                            variant='bordered'
+                            onPress={() => setSelectedChapter(c.id)}
+                          >
+                            {c.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Lesson selection */}
+                    {selectedChapter && (
+                      <div>
+                        <p className='mb-2 font-medium'>Chọn bài học</p>
+                        <div className='flex flex-wrap gap-2'>
+                          {lessons?.map((l: LessonPayload) => (
+                            <Button
+                              key={l.id}
+                              className={`border border-default-200 ${
+                                selectedLesson === l.id
+                                  ? 'bg-primary text-white'
+                                  : 'bg-default-50'
+                              }`}
+                              radius='sm'
+                              variant='bordered'
+                              onPress={() => setSelectedLesson(l.id)}
+                            >
+                              {l.name}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Button tạo câu hỏi */}
+                    <div>
+                      <Button
+                        color='primary'
+                        startContent={<Icon icon='lucide:plus' />}
+                        variant='solid'
+                        // onPress={() => {
+                        //   if (
+                        //     selectedGrade &&
+                        //     selectedSubject &&
+                        //     selectedChapter &&
+                        //     selectedLesson
+                        //   ) {
+                        //     // onCreateQuestion() => {};
+                        //   }
+                        // }}
+                        onPress={handleCreateQuestion}
+                      >
+                        Tạo câu hỏi mới
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <Button
+                      color='primary'
+                      startContent={<Icon icon='lucide:plus' />}
+                      variant='solid'
+                      onPress={() => {
+                        if (
+                          selectedGrade &&
+                          selectedSubject &&
+                          selectedChapter &&
+                          selectedLesson
+                        ) {
+                          onCreateQuestion;
+                        }
+                      }}
+                    >
+                      Tạo câu hỏi mới
+                    </Button>
+                  </div>
+                )}
               </div>
             </ModalBody>
           </>

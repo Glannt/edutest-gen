@@ -76,13 +76,53 @@ export const Navbar = () => {
           </Link>
         </NavbarBrand>
       </NavbarContent>
-
+      <NavbarContent
+        className='hidden sm:flex gap-4'
+        justify='center'
+      >
+        <NavbarItem>
+          <Link
+            className='hover:text-primary-600'
+            color='foreground'
+            href='#features'
+          >
+            Tính năng
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <Link
+            className='hover:text-primary-600'
+            color='foreground'
+            href='#testimonials'
+          >
+            Đánh giá
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <Link
+            className='hover:text-primary-600'
+            color='foreground'
+            href='#pricing'
+          >
+            Bảng giá
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <Link
+            className='hover:text-primary-600'
+            color='foreground'
+            href='#faq'
+          >
+            Hỏi đáp
+          </Link>
+        </NavbarItem>
+      </NavbarContent>
       <NavbarContent
         className='hidden sm:flex basis-1/5 sm:basis-full'
         justify='end'
       >
-        <NavbarItem className='hidden md:flex'>
-          {user ? (
+        {user ? (
+          <NavbarItem className='hidden md:flex'>
             <Dropdown placement='bottom-end'>
               <DropdownTrigger>
                 <Avatar
@@ -116,22 +156,36 @@ export const Navbar = () => {
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
-          ) : (
-            <Button
-              isExternal
-              as={Link}
-              className='text-lg font-normal text-default-600 bg-default-100 p-5 hover:scale-110 hover:duration-800 hover:transition-animate'
-              // href={
-              //   siteConfig.navMenuItems.find((item) => item.label === 'Login')
-              //     ?.href
-              // }
-              variant='ghost'
-              onPress={onOpen}
-            >
-              Đăng nhập
-            </Button>
-          )}
-        </NavbarItem>
+          </NavbarItem>
+        ) : (
+          <>
+            <NavbarItem>
+              <Button
+                isExternal
+                as={Link}
+                className='text-md font-normal text-default-600 bg-default-100 p-5 hover:scale-110 hover:duration-800 hover:transition-animate'
+                // href={
+                //   siteConfig.navMenuItems.find((item) => item.label === 'Login')
+                //     ?.href
+                // }
+                variant='ghost'
+                onPress={onOpen}
+              >
+                Đăng nhập
+              </Button>
+            </NavbarItem>
+            <NavbarItem>
+              <Button
+                className='font-medium'
+                color='primary'
+                radius='full'
+                variant='flat'
+              >
+                Dùng thử miễn phí
+              </Button>
+            </NavbarItem>
+          </>
+        )}
       </NavbarContent>
 
       <NavbarContent

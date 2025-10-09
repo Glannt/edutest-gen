@@ -29,4 +29,9 @@ public class QuestionType extends BaseEntity {
     @JsonManagedReference
     private Set<Question> questions =new HashSet<>();
 
+    @OneToMany(mappedBy = "questionType", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @JsonManagedReference
+    private Set<MatrixDetail> matrixDetails =new HashSet<>();
+
 }

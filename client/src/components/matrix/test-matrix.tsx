@@ -1,257 +1,256 @@
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableColumn,
-//   TableHeader,
-//   TableRow,
-// } from '@heroui/table';
+import React, { useMemo } from 'react';
 
-// import { useMatrixStore } from '@/store/matrix.store';
-
-// export const TestMatrix = () => {
-//   const { structures } = useMatrixStore();
-
-//   return (
-//     <Table>
-//       <TableHeader>
-//         <TableColumn>Chương</TableColumn>
-//         <TableColumn>Bài học</TableColumn>
-//         <TableColumn>Mức độ</TableColumn>
-//         <TableColumn>Loại câu hỏi</TableColumn>
-//         <TableColumn>Số câu</TableColumn>
-//       </TableHeader>
-//       <TableBody>
-//         {structures.map((s) => (
-//           <TableRow key={s.id}>
-//             <TableCell>{s.chapter}</TableCell>
-//             <TableCell>{s.lesson}</TableCell>
-//             <TableCell>{s.level}</TableCell>
-//             <TableCell>{s.questionType}</TableCell>
-//             <TableCell className='text-center'>{s.questionCount}</TableCell>
-//           </TableRow>
-//         ))}
-//       </TableBody>
-//     </Table>
-//   );
-// };
-
-import { useTableDataMatrix } from '@/hooks/useTableData';
+import { useMatrixStore } from '@/store/matrix.store';
+import { useMatrixSummary } from '@/hooks/useMatrixSummary';
+import { useLevels } from '@/hooks/useLevels';
+import { useQuestionTypes } from '@/hooks/useQuestionTypes';
+import { useEntityNameMap } from '@/hooks/useEntityNameMap';
+import { useChapters } from '@/hooks/useChapter';
+import { useLessons } from '@/hooks/useLesson';
 
 export const TestMatrixDynamic = () => {
-  const { tableData, levels, questionTypes, subjects } = useTableDataMatrix();
+  const structures = useMatrixStore((s) => s.structures);
+  const matrixInfo = useMatrixStore((s) => s.matrixInfo);
+  const summary = useMatrixSummary();
 
-  const levelQuestionMap: Record<string, string[]> = {};
+  const { data: levels = [] } = useLevels();
+  const { data: questionTypes = [] } = useQuestionTypes();
+  const { data: chapters = [] } = useChapters();
+  const { data: lessons = [] } = useLessons();
 
-  levels.forEach((level) => {
-    levelQuestionMap[level] = questionTypes.filter((qt) =>
-      tableData.some((row) => row[`${level}_${qt}`] !== undefined)
-    );
-  });
+  const chapterNameMap = useEntityNameMap(chapters);
+  const lessonNameMap = useEntityNameMap(lessons);
 
-  const toNumber = (value: unknown) => {
-    if (typeof value === 'number') return value;
+  // Gom theo chương
+  const chapterGroups = useMemo(() => {
+    const map = new Map<number | string, typeof structures>();
 
-    return 0;
+    structures.forEach((it) => {
+      const key = it.chapterId ?? `chapter_${it.chapterId ?? 'unknown'}`;
+
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(it);
+    });
+
+    return map;
+  }, [structures]);
+
+  // Hàm tính tổng số câu theo từng loại câu hỏi của một row
+  const countByQuestionType = (lessonItems: typeof structures) => {
+    const result: Record<number, number> = {};
+
+    questionTypes.forEach((qt) => (result[qt.id] = 0));
+
+    lessonItems.forEach((it) => {
+      if (it.questionTypeId != null) {
+        result[it.questionTypeId] += it.questionCount || 0;
+      }
+    });
+
+    return result;
   };
+
+  // Hàm tính tổng điểm (ở đây tạm tính = tổng số câu)
+  const calcTotalScore = (lessonItems: typeof structures) =>
+    lessonItems.reduce((sum, it) => sum + (it.questionCount || 0), 0);
 
   return (
     <div className='w-full overflow-x-auto'>
       <table className='w-full border-collapse text-sm'>
-        {/* Header */}
+        {/* === HEADER === */}
         <thead>
           <tr>
             <th
-              className='border border-table-border bg-cyan px-4 py-3 text-center font-bold text-table-header-foreground'
+              className='border px-4 py-3 '
               rowSpan={3}
             >
               CHƯƠNG
             </th>
             <th
-              className='border border-table-border bg-table-header px-4 py-3 text-center font-bold text-table-header-foreground'
+              className='border px-4 py-3 '
               rowSpan={3}
             >
-              NỘI DUNG/ ĐƠN VỊ KIẾN THỨC
+              NỘI DUNG / BÀI HỌC
             </th>
+
             <th
-              className='border border-table-border bg-table-header px-4 py-3 text-center font-bold text-table-header-foreground'
-              colSpan={9}
+              className='border px-4 py-3 '
+              colSpan={levels.length * questionTypes.length}
             >
               MỨC ĐỘ NHẬN THỨC
             </th>
+
             <th
-              className='border border-table-border bg-table-header px-4 py-3 text-center font-bold text-table-header-foreground'
-              colSpan={3}
+              className='border px-4 py-3 '
+              colSpan={questionTypes.length}
             >
               TỔNG SỐ CÂU HỎI
             </th>
+
             <th
-              className='border border-table-border bg-table-header px-4 py-3 text-center font-bold text-table-header-foreground'
+              className='border px-4 py-3 '
               rowSpan={3}
             >
-              TỔNG ĐIỂM
-              <br />%
+              % TỔNG ĐIỂM
             </th>
           </tr>
+
           <tr>
-            {levels.map((level) => (
+            {levels.map((lv) => (
               <th
-                key={level}
-                className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
+                key={lv.id}
+                className='border px-3 py-2 text-center'
                 colSpan={questionTypes.length}
               >
-                {level}
+                {lv.name}
               </th>
             ))}
-            {/* dynamic question types */}
 
             {questionTypes.map((qt) => (
               <th
-                key={`${qt}`}
-                className='border border-table-border bg-table-header px-4 py-2 text-center font-bold text-table-header-foreground'
+                key={qt.id}
+                className='border px-3 py-2 text-center'
                 rowSpan={2}
               >
-                {qt}
+                {qt.name}
               </th>
             ))}
           </tr>
-          {/* dynamic level question type */}
+
           <tr>
-            {levels.map((level) =>
+            {levels.map((lv) =>
               questionTypes.map((qt) => (
                 <th
-                  key={`${level}_${qt}`}
-                  className='border border-table-border bg-table-header px-3 py-2 text-center font-bold text-xs text-table-header-foreground'
+                  key={`${lv.id}_${qt.id}`}
+                  className='border px-3 py-2 text-center text-xs '
                 >
-                  {qt}
+                  {qt.name}
                 </th>
               ))
             )}
           </tr>
         </thead>
 
-        {/* Body */}
-
-        {/* test */}
+        {/* === BODY === */}
         <tbody>
-          {tableData.map((row, idx) => (
-            <tr key={idx}>
-              {/* Chapter */}
-              {!row.isSubRow && row.rowSpan && row.content !== 'TỔNG' && (
-                <td
-                  className='border border-table-border px-4 py-3 text-center align-middle'
-                  rowSpan={row.rowSpan}
-                >
-                  {row.chapter}
-                </td>
-              )}
-              {/* Content */}
-              <td
-                className={`border border-table-border px-4 py-3 text-left ${
-                  row.content === 'TỔNG'
-                    ? 'bg-table-header font-bold text-table-header-foreground'
-                    : ''
-                }`}
-              >
-                {row.content}
-              </td>
-              {/* Dynamic level_questionType */}
-              {levels.map((level) =>
-                questionTypes.map((qt) => (
-                  <td
-                    key={`${level}_${qt}_${idx}`}
-                    className={`border border-table-border px-3 py-2 text-center ${
-                      row.content === 'TỔNG' ? 'bg-table-total font-bold' : ''
-                    }`}
-                  >
-                    {row[`${level}_${qt}`] ?? ''}
-                  </td>
-                ))
-              )}
-              {/* Subjects */}
-              {/* {subjects.map((sub) => (
-                <td
-                  key={`${sub}_${idx}`}
-                  className={`border border-table-border px-3 py-2 text-center ${
-                    row.content === 'TỔNG' ? 'bg-table-total font-bold' : ''
-                  }`}
-                >
-                  {row[sub] ?? ''}
-                </td>
-              ))} */}
-              {/* Tổng số câu hỏi (TN, D-S, TL-N) */}
-              <td
-                className={`border border-table-border px-3 py-2 text-center font-bold ${
-                  row.content === 'TỔNG' ? 'bg-table-total' : ''
-                }`}
-              >
-                {row.total_tn ?? ''}
-              </td>
-              <td
-                className={`border border-table-border px-3 py-2 text-center font-bold ${
-                  row.content === 'TỔNG' ? 'bg-table-total' : ''
-                }`}
-              >
-                {row.total_ds ?? ''}
-              </td>
-              <td
-                className={`border border-table-border px-3 py-2 text-center font-bold ${
-                  row.content === 'TỔNG' ? 'bg-table-total' : ''
-                }`}
-              >
-                {row.total_tln ?? ''}
-              </td>
-              {/* Tổng điểm */}
-              <td className='border border-table-border px-3 py-2 text-center font-bold'>
-                {row.totalScore ?? ''}
-              </td>
-            </tr>
-          ))}
-          <tr>
+          {Array.from(chapterGroups.entries()).map(([chapterKey, items]) => {
+            const byLesson = new Map<number | string, typeof structures>();
+
+            items.forEach((it) => {
+              const k = it.lessonId ?? `lesson_${it.lessonId ?? 'unknown'}`;
+
+              if (!byLesson.has(k)) byLesson.set(k, []);
+              byLesson.get(k)!.push(it);
+            });
+
+            const chapterName = chapterNameMap[items[0]?.chapterId ?? 0] || '—';
+            const chapterRowSpan = Array.from(byLesson.keys()).length;
+
+            return Array.from(byLesson.entries()).map(
+              ([lessonKey, lessonItems], idx) => {
+                const lessonName =
+                  lessonNameMap[lessonItems[0]?.lessonId ?? 0] || '—';
+                const typeCounts = countByQuestionType(lessonItems);
+                const totalScore = calcTotalScore(lessonItems);
+
+                return (
+                  <tr key={`${chapterKey}_${lessonKey}`}>
+                    {/* ✅ In cột CHƯƠNG chỉ một lần đầu tiên của mỗi nhóm */}
+                    {idx === 0 && (
+                      <td
+                        className='border px-3 py-2 text-center align-middle font-medium'
+                        rowSpan={chapterRowSpan}
+                      >
+                        {chapterName}
+                      </td>
+                    )}
+
+                    {/* Cột bài học */}
+                    <td className='border px-3 py-2'>{lessonName}</td>
+
+                    {/* Các cột động */}
+                    {levels.map((lv) =>
+                      questionTypes.map((qt) => {
+                        const found = lessonItems.find(
+                          (it) =>
+                            it.levelId === lv.id && it.questionTypeId === qt.id
+                        );
+
+                        return (
+                          <td
+                            key={`${lessonKey}_${lv.id}_${qt.id}`}
+                            className='border px-3 py-2 text-center'
+                          >
+                            {found ? found.questionCount : ''}
+                          </td>
+                        );
+                      })
+                    )}
+
+                    {/* Tổng theo questionType */}
+                    {questionTypes.map((qt) => (
+                      <td
+                        key={`sum_${lessonKey}_${qt.id}`}
+                        className='border px-3 py-2 text-center font-semibold '
+                      >
+                        {typeCounts[qt.id] || ''}
+                      </td>
+                    ))}
+
+                    {/* Tổng điểm */}
+                    <td className='border px-3 py-2 text-center font-bold '>
+                      {matrixInfo
+                        ? `${((totalScore / matrixInfo.totalQuestions) * 100).toFixed(0)}%`
+                        : totalScore}
+                    </td>
+                  </tr>
+                );
+              }
+            );
+          })}
+
+          {/* === Dòng tổng cuối === */}
+          <tr className='font-bold '>
             <td
-              className='border border-table-border bg-table-header px-4 py-3 text-center font-bold text-table-header-foreground'
+              className='border px-3 py-2 text-center'
               colSpan={2}
             >
               TỔNG
             </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              7
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              0
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              0
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              5
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              4
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              0
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              0
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              0
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold'>
-              6
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold text-destructive'>
-              12
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold text-destructive'>
-              4
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold text-destructive'>
-              6
-            </td>
-            <td className='border border-table-border bg-table-total px-3 py-3 text-center font-bold text-destructive'>
-              10
+
+            {levels.map((lv) =>
+              questionTypes.map((qt) => {
+                const key = `${lv.id}_${qt.id}`;
+                const v = summary.totalsByLevelQuestionType[key] ?? 0;
+
+                return (
+                  <td
+                    key={key}
+                    className='border px-3 py-2 text-center'
+                  >
+                    {v || ''}
+                  </td>
+                );
+              })
+            )}
+
+            {questionTypes.map((qt) => {
+              const totalByQT = summary.uniqueLevelQuestionPairs
+                .filter((p) => p.questionTypeId === qt.id)
+                .reduce((a, b) => a + b.count, 0);
+
+              return (
+                <td
+                  key={`qt_sum_${qt.id}`}
+                  className='border px-3 py-2 text-center'
+                >
+                  {totalByQT || ''}
+                </td>
+              );
+            })}
+
+            <td className='border px-3 py-2 text-center '>
+              {summary.totalQuestions}
             </td>
           </tr>
         </tbody>

@@ -17,7 +17,7 @@ import java.util.List;
 @RequestMapping("/levels")
 @RestResponse
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')") // Chỉ cho phép ADMIN truy cập
+@PreAuthorize("hasAnyRole('ADMIN','TEACHER')") // Chỉ cho phép ADMIN truy cập
 public class LevelController {
     private final LevelService levelService;
 

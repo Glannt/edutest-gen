@@ -10,12 +10,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "chapters")
+@Table(
+        name = "chapters",
+        indexes = {
+                @Index(name = "idx_chapter_order", columnList = "order_index"),
+                @Index(name = "idx_chapter_name", columnList = "name")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+
 public class Chapter extends BaseEntity {
 
     @Column(nullable = false)

@@ -24,8 +24,15 @@ public class MatrixDetail extends BaseEntity {
     @JoinColumn(name="lesson_id")
     private Lesson lesson;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="question_type_id")
+    private QuestionType questionType;
+
     @Column(name = "question_count", nullable = false)
     @Builder.Default
     private Integer questionCount = 0;
+
+    @Column(name = "percent")
+    private Double percent;
 
 }

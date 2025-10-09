@@ -104,6 +104,11 @@ public class QuestionController {
         return questionService.searchN8n();
     }
 
+    @GetMapping("lessons/{lessonId}/questions")
+    public List<QuestionResponse> getQuestionsByLesson(@PathVariable Long lessonId) {
+        return questionService.findByLessonId(lessonId);
+    }
+
 //    @GetMapping("/by-criteria")
 //    @Operation(summary = "Get questions by criteria")
 //    public ResponseEntity<ApiResponse<List<QuestionDto>>> getQuestionsByCriteria(

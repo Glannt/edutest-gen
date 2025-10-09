@@ -3,8 +3,10 @@ package com.dotnt.server.repository;
 import com.dotnt.server.entity.Grade;
 import com.dotnt.server.entity.GradeSubject;
 import com.dotnt.server.entity.Subject;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -21,6 +23,10 @@ public interface GradeSubjectRepository extends JpaRepository<GradeSubject, Long
         FROM GradeSubject gs
         WHERE gs.grade.id = :gradeId
     """)
+    @QueryHints({
+            @QueryHint(name = org.hibernate.annotations.QueryHints.READ_ONLY, value = "true"),
+            @QueryHint(name = org.hibernate.annotations.QueryHints.CACHEABLE, value = "true")
+    })
     List<Subject> findSubjectsByGradeId(@Param("gradeId") Long gradeId);
 
     /**

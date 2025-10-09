@@ -38,11 +38,5 @@ public class QuestionDto extends BaseDto {
 
     private List<OptionDto> options;
 
-    // Additional fields for display
-//    private String lessonName;
-//    private String difficultyName;
-//    private String questionTypeName;
-//    private String subjectName;
-//    private String gradeName;
-//    private String chapterName;
+
 }

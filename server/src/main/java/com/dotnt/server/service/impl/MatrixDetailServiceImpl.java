@@ -65,8 +65,8 @@ public class MatrixDetailServiceImpl implements MatrixDetailService {
                 .id(detail.getId())
                 .matrixName(detail.getMatrix().getName())
                 .percent((double) (detail.getQuestionCount() * 100 / detail.getMatrix().getTotalQuestions()))
-                .lessonName(detail.getLesson().getName())
-                .levelName(detail.getLevel().getName())
+//                .lessonName(detail.getLesson().getName())
+//                .levelName(detail.getLevel().getName())
                 .quantity(detail.getQuestionCount())
                 .build();
     }

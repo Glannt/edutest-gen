@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,6 +15,6 @@ public class MatrixRequest {
     private String name;
     private String description;
     private Integer totalQuestions;
-    private Integer durationMinutes;
+    private List<MatrixDetailRequest> matrixDetails;
     private Long userId;
 }

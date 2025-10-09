@@ -1,20 +1,21 @@
 import { Button, Input, Spinner, Tab, Tabs } from '@heroui/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
+import { useNavigate } from 'react-router-dom';
 
 import { GradePayload } from '@/types/grade';
 import { useGrades } from '@/hooks/useGrades';
 import { useSubjectsByGrade } from '@/hooks/useGradeSubject';
 import { useSubjects } from '@/hooks/useSubjects';
-import { ContributeModal } from '@/components/content/contribute-modal';
-import { QuestionSidebar } from '@/components/lesson/lesson-sidebar';
+import { LessonSidebar } from '@/components/lesson/lesson-sidebar';
 import { useLessonsByChapter } from '@/hooks/useLesson';
-import { LessonCard } from '@/components/lesson/lesson-card';
-import { LessonPayload } from '@/types/lesson';
+import { LessonGrid } from '@/components/lesson/lesson-grid';
+import { QuestionSelectModal } from '@/components/question/modal/question-select-modal';
 
-export const QuestionComponent: React.FC = () => {
+export const LessonComponent: React.FC = () => {
+  const navigate = useNavigate();
   // Tab hiện tại
-  const [selectedGrade, setSelectedGrade] = useState<string | number>('all');
+  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
 
   // State cho tìm kiếm
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,11 +35,26 @@ export const QuestionComponent: React.FC = () => {
   // API hooks
   const { data: grades, isLoading, isError } = useGrades();
 
+  // chọn default tabs
+  useEffect(() => {
+    if (grades && grades.length > 0 && !selectedGrade) {
+      setSelectedGrade(grades[0].id);
+    }
+  }, [grades, selectedGrade]);
+
+  // handle select param lesson id
+  const handleSelect = (lessonId: number) => {
+    // 1️⃣ Lưu vào store hoặc state nếu cần
+    setSelectedLessonId?.(lessonId);
+
+    // 2️⃣ Điều hướng tới QuestionListByLesson
+    navigate(`/dashboard/lesson/${lessonId}/questions`);
+  };
+
   // Tính gradeId đang chọn
-  const selectedGradeId =
-    selectedGrade !== 'all' && selectedGrade !== 'other'
-      ? Number(selectedGrade)
-      : undefined;
+  const selectedGradeId = Number(selectedGrade)
+    ? Number(selectedGrade)
+    : undefined;
 
   // Gọi hai hook subject
   const allSubjectsQuery = useSubjects();
@@ -51,18 +67,11 @@ export const QuestionComponent: React.FC = () => {
   } = useLessonsByChapter(selectedChapterId || undefined);
 
   // Chọn data tương ứng
-  const subjects =
-    selectedGrade === 'all' ? allSubjectsQuery.data : subjectsByGradeQuery.data;
+  const subjects = subjectsByGradeQuery.data;
 
-  const isSubjectsLoading =
-    selectedGrade === 'all'
-      ? allSubjectsQuery.isLoading
-      : subjectsByGradeQuery.isLoading;
+  const isSubjectsLoading = subjectsByGradeQuery.isLoading;
 
-  const isSubjectsError =
-    selectedGrade === 'all'
-      ? allSubjectsQuery.isError
-      : subjectsByGradeQuery.isError;
+  const isSubjectsError = subjectsByGradeQuery.isError;
 
   // --- HANDLERS ---
   const handleSubjectSelect = (subjectId: number) => {
@@ -95,9 +104,9 @@ export const QuestionComponent: React.FC = () => {
             cursor: 'bg-primary',
           }}
           color='primary'
-          selectedKey={selectedGrade}
+          selectedKey={selectedGrade?.toString() ?? ''}
           variant='underlined'
-          onSelectionChange={setSelectedGrade}
+          onSelectionChange={(key) => setSelectedGrade(Number(key))}
         >
           {/* Tabs header */}
           {grades?.map((grade: GradePayload) => (
@@ -116,7 +125,7 @@ export const QuestionComponent: React.FC = () => {
       {/* Tab Panel - chứa toàn bộ layout bên trong */}
       <div className='flex flex-1 mt-2'>
         {/* Sidebar */}
-        <QuestionSidebar
+        <LessonSidebar
           isLoading={isSubjectsLoading}
           selectedChapterId={selectedChapterId}
           selectedGradeId={selectedGradeId}
@@ -160,7 +169,7 @@ export const QuestionComponent: React.FC = () => {
             </div>
           </div>
 
-          {/* Subjects Grid */}
+          {/* Chapter Grid */}
           <div className='mt-4'>
             {!selectedChapterId ? (
               <div className='text-center text-default-500 py-20'>
@@ -178,15 +187,19 @@ export const QuestionComponent: React.FC = () => {
                 Lỗi tải danh sách bài học.
               </div>
             ) : lessons && lessons.length > 0 ? (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-                {lessons.map((lesson: LessonPayload) => (
-                  <LessonCard
-                    key={lesson.id}
-                    lesson={lesson}
-                    onSelect={(lessonId) => setSelectedLessonId(lessonId)}
-                  />
-                ))}
-              </div>
+              // <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+              //   {lessons.map((lesson: LessonPayload) => (
+              //     <LessonCard
+              //       key={lesson.id}
+              //       lesson={lesson}
+              //       onSelect={handleSelect}
+              //     />
+              //   ))}
+              // </div>
+              <LessonGrid
+                lessons={lessons}
+                onSelect={handleSelect}
+              />
             ) : (
               <div className='text-center text-default-500 py-20'>
                 Không có bài học nào trong chương này.
@@ -196,10 +209,9 @@ export const QuestionComponent: React.FC = () => {
         </main>
       </div>
 
-      <ContributeModal
+      <QuestionSelectModal
         isOpen={isContributeModalOpen}
         onClose={() => setIsContributeModalOpen(false)}
-        onCreateQuestion={() => {}}
       />
     </div>
   );
