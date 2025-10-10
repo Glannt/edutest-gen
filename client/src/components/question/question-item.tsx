@@ -1,8 +1,10 @@
 import React from 'react';
 import { Checkbox, Card, Chip, Tooltip, Button } from '@heroui/react';
 import { Icon } from '@iconify/react';
+import { InlineMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
-import { QuestionPayload } from '@/types/question';
+import { QuestionPayload, ContentBlockPayload } from '@/types/question';
 import { OptionPayload } from '@/types/option';
 
 interface QuestionItemProps {
@@ -12,6 +14,20 @@ interface QuestionItemProps {
   onEdit?: () => void;
   onDelete?: () => void;
 }
+
+// helper: render blocks với react-katex
+const renderBlocks = (blocks: ContentBlockPayload[]): React.ReactNode[] => {
+  return blocks.map((block, idx) => {
+    if (block.type === 'text' && block.value) {
+      return <InlineMath key={idx}>{block.value} </InlineMath>;
+    }
+    if (block.type === 'formula' && block.latex) {
+      return <InlineMath key={idx}>{block.latex}</InlineMath>;
+    }
+
+    return null;
+  });
+};
 
 export const QuestionItem: React.FC<QuestionItemProps> = ({
   question,
@@ -55,13 +71,15 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
           </div>
 
           {/* Nội dung câu hỏi */}
-          <p className='mb-3 text-foreground'>{question.content}</p>
+          <p className='mb-3 text-foreground'>
+            {renderBlocks(question.contentJson)}
+          </p>
 
           {/* Options */}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
             {question.options?.map((option: Partial<OptionPayload>, idx) => (
               <div
-                key={option.id}
+                key={option.id ?? idx}
                 className='flex gap-2'
               >
                 <span className='font-medium'>
@@ -81,9 +99,9 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
           </div>
 
           {/* Giải thích / đáp án */}
-          {question.explanation && (
+          {question.explanationJson && question.explanationJson.length > 0 && (
             <div className='border-t border-default-200 pt-2 mt-2 text-default-500 text-sm'>
-              Giải thích: {question.explanation}
+              Giải thích: {renderBlocks(question.explanationJson)}
             </div>
           )}
         </div>

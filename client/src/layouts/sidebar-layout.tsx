@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -7,7 +7,15 @@ import {
   DrawerFooter,
 } from '@heroui/drawer';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Avatar, Badge, Button } from '@heroui/react';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from '@heroui/react';
 import { Icon } from '@iconify/react';
 
 import { ThemeSwitch } from '@/components/theme-switch';
@@ -68,6 +76,11 @@ export default function SidebarLayout() {
   const toggleSidebar = () => {
     setIsHover(!isHover);
     setIsOpen(!isOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth-edutest-storage');
+    window.location.href = '/';
   };
 
   return (
@@ -169,11 +182,7 @@ export default function SidebarLayout() {
                     </Button>
                   </Badge>
 
-                  <Avatar
-                    name='Thanh'
-                    size='sm'
-                    src='https://img.heroui.chat/image/avatar?w=40&h=40&u=user1'
-                  />
+                  <UserDropdown onLogout={handleLogout} />
                 </div>
               </DrawerFooter>
             </>
@@ -189,5 +198,54 @@ export default function SidebarLayout() {
         </div>
       </main>
     </div>
+  );
+}
+
+export function UserDropdown({ onLogout }: any) {
+  const [fullName, setFullName] = useState<string>('Người dùng');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('auth-edutest-storage');
+
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const user = parsed?.state?.user;
+
+        if (user?.full_name) setFullName(user.full_name);
+      }
+    } catch (err) {
+      console.error('Lỗi khi đọc thông tin người dùng:', err);
+    }
+  }, []);
+
+  return (
+    <Dropdown>
+      <DropdownTrigger>
+        <Avatar
+          isFocusable
+          name={fullName}
+          size='sm'
+          src={`https://img.heroui.chat/image/avatar?w=40&h=40&u=${encodeURIComponent(fullName)}`}
+        />
+      </DropdownTrigger>
+
+      <DropdownMenu aria-label='User menu'>
+        <DropdownItem
+          key='name'
+          isReadOnly
+        >
+          <span style={{ fontWeight: 'bold' }}>{fullName}</span>
+        </DropdownItem>
+
+        <DropdownItem
+          key='logout'
+          color='danger'
+          onAction={onLogout}
+        >
+          Đăng xuất
+        </DropdownItem>
+      </DropdownMenu>
+    </Dropdown>
   );
 }

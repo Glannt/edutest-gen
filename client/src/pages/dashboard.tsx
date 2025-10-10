@@ -1,21 +1,31 @@
+import { Button } from '@heroui/button';
+import { useNavigate } from 'react-router-dom';
+
 export default function DashboardPage() {
+  const navigate = useNavigate();
+
+  const actions = [
+    { title: 'Tạo bài thi', color: 'primary', path: '/dashboard/exam' },
+    { title: 'Tạo ma trận', color: 'secondary', path: '/dashboard/matrix' },
+    { title: 'Tạo bài học', color: 'success', path: '/dashboard/lesson' },
+  ];
+
   return (
     <div className='container mx-auto p-6 space-y-6'>
       <h1 className='text-2xl font-bold'>Dashboard</h1>
-      <p>
-        Welcome to your dashboard. This is the main page of your application.
-      </p>
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className='p-6 rounded-lg border border-divider bg-content1 shadow-sm'
+      <p>Chào mừng bạn đến với bảng điều khiển. Hãy chọn thao tác bên dưới.</p>
+
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+        {actions.map((item, index) => (
+          <Button
+            key={index}
+            className='p-10 h-40 text-lg font-semibold rounded-xl shadow-md hover:scale-[1.03] transition-transform border border-divider w-full flex items-center justify-center text-center'
+            color={item.color as any}
+            variant='flat'
+            onPress={() => navigate(item.path)}
           >
-            <h3 className='text-lg font-medium mb-2'>Card {i}</h3>
-            <p className='text-foreground-600'>
-              This is a sample card with some content.
-            </p>
-          </div>
+            {item.title}
+          </Button>
         ))}
       </div>
     </div>

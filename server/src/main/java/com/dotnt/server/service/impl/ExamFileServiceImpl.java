@@ -1,10 +1,14 @@
 package com.dotnt.server.service.impl;
 
+import com.dotnt.server.dto.ContentBlockDto;
 import com.dotnt.server.entity.Exam;
 import com.dotnt.server.entity.ExamQuestion;
 import com.dotnt.server.entity.Option;
+import com.dotnt.server.entity.Question;
 import com.dotnt.server.repository.ExamRepository;
 import com.dotnt.server.service.ExamFileService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.DocumentException;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.xwpf.usermodel.*;
@@ -91,6 +95,7 @@ public class ExamFileServiceImpl implements ExamFileService {
     private XWPFDocument buildExamDocument(Exam exam) {
         XWPFDocument doc = new XWPFDocument();
 
+        // --- Tiêu đề ---
         XWPFParagraph title = doc.createParagraph();
         title.setAlignment(ParagraphAlignment.CENTER);
         XWPFRun titleRun = title.createRun();
@@ -100,11 +105,15 @@ public class ExamFileServiceImpl implements ExamFileService {
 
         int index = 1;
         for (ExamQuestion eq : exam.getExamQuestions()) {
+            Question q = eq.getQuestion();
+
+            // --- Nội dung câu hỏi từ contentJson ---
             XWPFParagraph qPara = doc.createParagraph();
             XWPFRun qRun = qPara.createRun();
-            qRun.setText(index++ + ". " + eq.getQuestion().getContent());
+            qRun.setText(index++ + ". " + buildContentText(q));
 
-            List<Option> options = new ArrayList<>(eq.getQuestion().getOptions());
+            // --- Options ---
+            List<Option> options = new ArrayList<>(q.getOptions());
             options.sort(Comparator.comparing(Option::getOrderIndex));
             char label = 'A';
             for (Option opt : options) {
@@ -112,7 +121,17 @@ public class ExamFileServiceImpl implements ExamFileService {
                 XWPFRun optRun = optPara.createRun();
                 optRun.setText("   " + label++ + ". " + opt.getContent());
             }
+
+            // --- Giải thích (nếu có) ---
+            if (q.getExplanationJson() != null && !q.getExplanationJson().isEmpty()) {
+                XWPFParagraph expPara = doc.createParagraph();
+                XWPFRun expRun = expPara.createRun();
+                expRun.setItalic(true);
+                expRun.setColor("555555");
+                expRun.setText("Giải thích: " + buildExplanationText(q));
+            }
         }
+
         return doc;
     }
 
@@ -127,13 +146,24 @@ public class ExamFileServiceImpl implements ExamFileService {
 
         int i = 1;
         for (ExamQuestion eq : exam.getExamQuestions()) {
-            pdfDoc.add(new com.itextpdf.text.Paragraph(i++ + ". " + eq.getQuestion().getContent()));
-            List<Option> options = new ArrayList<>(eq.getQuestion().getOptions());
+            Question q = eq.getQuestion();
+
+            // --- Nội dung ---
+            pdfDoc.add(new com.itextpdf.text.Paragraph(i++ + ". " + buildContentText(q)));
+
+            // --- Options ---
+            List<Option> options = new ArrayList<>(q.getOptions());
             options.sort(Comparator.comparing(Option::getOrderIndex));
             char label = 'A';
             for (Option opt : options) {
                 pdfDoc.add(new com.itextpdf.text.Paragraph("   " + label++ + ". " + opt.getContent()));
             }
+
+            // --- Giải thích ---
+            if (q.getExplanationJson() != null && !q.getExplanationJson().isEmpty()) {
+                pdfDoc.add(new com.itextpdf.text.Paragraph("Giải thích: " + buildExplanationText(q)));
+            }
+
             pdfDoc.add(new com.itextpdf.text.Paragraph("\n"));
         }
 
@@ -154,16 +184,30 @@ public class ExamFileServiceImpl implements ExamFileService {
             com.itextpdf.text.pdf.PdfWriter.getInstance(pdfDoc, out);
             pdfDoc.open();
 
-            pdfDoc.add(new com.itextpdf.text.Paragraph("ĐỀ THI: " + exam.getName() + " (" + exam.getCode() + ")\n\n"));
+            // --- Tiêu đề ---
+            pdfDoc.add(new com.itextpdf.text.Paragraph(
+                    "ĐỀ THI: " + exam.getName() + " (" + exam.getCode() + ")\n\n"));
+
             int i = 1;
             for (ExamQuestion eq : exam.getExamQuestions()) {
-                pdfDoc.add(new com.itextpdf.text.Paragraph(i++ + ". " + eq.getQuestion().getContent()));
-                List<Option> options = new ArrayList<>(eq.getQuestion().getOptions());
+                Question q = eq.getQuestion();
+
+                // Nội dung câu hỏi từ contentJson
+                pdfDoc.add(new com.itextpdf.text.Paragraph(i++ + ". " + buildContentText(q)));
+
+                // Options
+                List<Option> options = new ArrayList<>(q.getOptions());
                 options.sort(Comparator.comparing(Option::getOrderIndex));
                 char label = 'A';
                 for (Option opt : options) {
                     pdfDoc.add(new com.itextpdf.text.Paragraph("   " + label++ + ". " + opt.getContent()));
                 }
+
+                // Giải thích (nếu có)
+                if (q.getExplanationJson() != null && !q.getExplanationJson().isEmpty()) {
+                    pdfDoc.add(new com.itextpdf.text.Paragraph("Giải thích: " + buildExplanationText(q)));
+                }
+
                 pdfDoc.add(new com.itextpdf.text.Paragraph("\n"));
             }
 
@@ -173,4 +217,35 @@ public class ExamFileServiceImpl implements ExamFileService {
         }
         return fileName;
     }
+
+
+    private String buildContentText(Question question) {
+        if (question.getContentJson() == null || question.getContentJson().isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (ContentBlockDto block : question.getContentJson()) {
+            if ("text".equals(block.getType())) {
+                sb.append(block.getValue());
+            } else if ("formula".equals(block.getType())) {
+                sb.append(" [").append(block.getLatex()).append("] ");
+            }
+        }
+        return sb.toString();
+    }
+
+    private String buildExplanationText(Question question) {
+        if (question.getExplanationJson() == null || question.getExplanationJson().isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (ContentBlockDto block : question.getExplanationJson()) {
+            if ("text".equals(block.getType())) {
+                sb.append(block.getValue());
+            } else if ("formula".equals(block.getType())) {
+                sb.append(" [").append(block.getLatex()).append("] ");
+            }
+        }
+        return sb.toString();
+    }
+
+
 }

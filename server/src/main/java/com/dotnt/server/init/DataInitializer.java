@@ -1,8 +1,11 @@
 package com.dotnt.server.init;
 
+import com.dotnt.server.dto.ContentBlockDto;
 import com.dotnt.server.entity.*;
 import com.dotnt.server.enums.UserRole;
 import com.dotnt.server.repository.*;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -12,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -235,28 +239,76 @@ public class DataInitializer implements CommandLineRunner {
                 .findFirst().orElse(types.get(0));
 
         lessons.forEach(lesson -> {
+            // --- Câu hỏi 1 ---
             Question q1 = Question.builder()
                     .lesson(lesson)
-//                    .title("Câu 1: Kiến thức cơ bản về " + lesson.getName())
-                    .content("Noi dung cau hoi trac nghiem dau tien cua " + lesson.getName())
                     .questionType(multipleChoice)
                     .level(easy)
-//                    .createdBy("system")
+                    .contentJson(List.of(
+                            ContentBlockDto.builder()
+                                    .type("text")
+                                    .value("Cau hoi co ban ve ")
+                                    .build(),
+                            ContentBlockDto.builder()
+                                    .type("text")
+                                    .value(lesson.getName())
+                                    .build()
+                    ))
+                    .explanationJson(List.of(
+                            ContentBlockDto.builder()
+                                    .type("text")
+                                    .value("Day la phan giai thich cho cau hoi co ban.")
+                                    .build()
+                    ))
                     .build();
 
+            // --- Câu hỏi 2 ---
             Question q2 = Question.builder()
                     .lesson(lesson)
-//                    .title("Câu 2: Ứng dụng " + lesson.getName())
-                    .content("Mot cau hoi nang cao hon ve phan kien thuc nay.")
                     .questionType(multipleChoice)
                     .level(easy)
-//                    .createdBy("system")
+                    .contentJson(List.of(
+                            ContentBlockDto.builder()
+                                    .type("text")
+                                    .value("Cau hoi co ban ve ")
+                                    .build(),
+                            ContentBlockDto.builder()
+                                    .type("text")
+                                    .value(lesson.getName())
+                                    .build(),
+                            ContentBlockDto.builder()
+                                    .type("formula")
+                                    .latex("x^2 + 3x - 5")
+                                    .ast(Map.of(
+                                            "type","add",
+                                            "left",Map.of("type","pow","base","x","exp",2),
+                                            "right",Map.of("type","add","left",Map.of("type","mul","left",3,"right","x"),"right",-5)
+                                    ))
+                                    .build()
+                    ))
+                    .explanationJson(List.of(
+                            ContentBlockDto.builder()
+                                    .type("text")
+                                    .value("Day la phan giai thich cho cau hoi nang cao, co kem cong thuc.")
+                                    .build(),
+                            ContentBlockDto.builder()
+                                    .type("formula")
+                                    .latex("2*x+3")
+                                    .ast(Map.of(
+                                            "type","add",
+                                            "left",Map.of("type","mul","left",2,"right","x"),
+                                            "right",3
+                                    ))
+                                    .build()
+                    ))
                     .build();
 
             questionRepository.saveAll(List.of(q1, q2));
             log.info("✅ Questions created for lesson: {}", lesson.getName());
         });
+
     }
+
 
     private void initAccount() {
         if (userRepository.count() > 0) {
@@ -280,6 +332,9 @@ public class DataInitializer implements CommandLineRunner {
         userRepository.saveAll(List.of(user1, user2));
         log.info("Users created");
     }
+
+
+
 
 
 }

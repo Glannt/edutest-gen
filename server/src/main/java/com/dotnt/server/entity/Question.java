@@ -1,5 +1,7 @@
 package com.dotnt.server.entity;
 
+import com.dotnt.server.converter.ContentBlockConverter;
+import com.dotnt.server.dto.ContentBlockDto;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -8,6 +10,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -34,11 +37,19 @@ public class Question extends BaseEntity {
     @JoinColumn(name = "question_type_id", nullable = false)
     private QuestionType questionType;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
+//    @Column(nullable = false, columnDefinition = "TEXT")
+//    private String content;
+//
+//    @Column(columnDefinition = "TEXT")
+//    private String explanation;
 
-    @Column(columnDefinition = "TEXT")
-    private String explanation;
+    @Convert(converter = ContentBlockConverter.class)
+    @Column(name = "content_json", columnDefinition = "JSON", nullable = false)
+    private List<ContentBlockDto> contentJson;
+
+    @Convert(converter = ContentBlockConverter.class)
+    @Column(name = "explanation_json", columnDefinition = "JSON")
+    private List<ContentBlockDto> explanationJson;
 
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)

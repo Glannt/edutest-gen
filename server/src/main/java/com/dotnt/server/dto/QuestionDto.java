@@ -17,8 +17,10 @@ import java.util.UUID;
 @SuperBuilder
 public class QuestionDto extends BaseDto {
 
-    @NotBlank(message = "Question content is required")
-    private String content;
+    @NotNull(message = "Question content is required")
+    private List<ContentBlockDto> contentJson;
+
+    private List<ContentBlockDto> explanationJson;
 
     private String correctAnswer;
 

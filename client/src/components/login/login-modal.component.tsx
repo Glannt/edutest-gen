@@ -1,7 +1,7 @@
 import { Input } from '@heroui/input';
 import { Link } from '@heroui/link';
 import { Checkbox } from '@heroui/checkbox';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Modal,
   ModalContent,
@@ -10,7 +10,8 @@ import {
   ModalFooter,
 } from '@heroui/modal';
 import { Button } from '@heroui/button';
-import { CircularProgress, Spacer } from '@heroui/react';
+import { addToast, CircularProgress, Spacer } from '@heroui/react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   EyeFilledIcon,
@@ -58,7 +59,7 @@ export default function LoginModal(props: LoginModalProps) {
   const toggleVisibility = () => setIsVisible(!isVisible);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
+  const navigate = useNavigate();
   const handleUsername = (e: any) => {
     setUsername(e);
   };
@@ -70,6 +71,44 @@ export default function LoginModal(props: LoginModalProps) {
     e.preventDefault();
     loginMutation.mutate({ username, password });
   };
+
+  useEffect(() => {
+    if (loginMutation.isSuccess) {
+      addToast({
+        title: 'Đăng nhập thành công',
+        color: 'success',
+        timeout: 2000,
+      });
+      try {
+        const data = localStorage.getItem('auth-edutest-storage');
+
+        if (!data) return;
+
+        const parsed = JSON.parse(data);
+        const user = parsed?.state?.user;
+
+        if (user) {
+          // Điều hướng theo role
+          switch (user.role) {
+            case 'ADMIN':
+              navigate('/admin/dashboard');
+              break;
+            case 'TEACHER':
+              navigate('/dashboard');
+              break;
+            default:
+              navigate('/');
+          }
+        }
+      } catch (error) {
+        addToast({
+          title: 'Lỗi Đăng nhập ',
+          color: 'warning',
+          timeout: 2000,
+        });
+      }
+    }
+  }, [loginMutation.isSuccess, navigate]);
 
   return (
     <Modal

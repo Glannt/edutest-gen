@@ -19,6 +19,7 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from '@heroui/react';
+import { useNavigate } from 'react-router-dom';
 
 import { siteConfig } from '@/config/site';
 import { ThemeSwitch } from '@/components/theme-switch';
@@ -26,9 +27,21 @@ import { GithubIcon, SearchIcon } from '@/components/icons';
 import { Logo } from '@/components/icons';
 import LoginModal from '@/components/login/login-modal.component';
 import { useAuthStore } from '@/store/auth.store';
+import RegisterModal from '@/components/login/register.modal.component';
 
 export const Navbar = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const navigate = useNavigate();
+  const {
+    isOpen: isOpenLogin,
+    onOpen: onOpenLogin,
+    onOpenChange: onOpenChangeLogin,
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenRegister,
+    onOpen: onOpenRegister,
+    onOpenChange: onOpenChangeRegister,
+  } = useDisclosure();
   const user = useAuthStore.getState().user;
 
   const searchInput = (
@@ -54,6 +67,10 @@ export const Navbar = () => {
       type='search'
     />
   );
+  const handleLogout = () => {
+    localStorage.removeItem('auth-edutest-storage');
+    window.location.href = '/';
+  };
 
   return (
     <HeroUINavbar
@@ -146,13 +163,13 @@ export const Navbar = () => {
                   <p className='font-semibold'>Signed in as</p>
                   <p className='font-semibold'>{user?.email}</p>
                 </DropdownItem>
-                <DropdownItem key='settings'>My Settings</DropdownItem>
+                <DropdownItem key='settings'>Cài đặt</DropdownItem>
                 <DropdownItem
                   key='logout'
                   color='danger'
-                  // onClick={handleLogout}
+                  onClick={handleLogout}
                 >
-                  Log Out
+                  Đăng xuất
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
@@ -163,25 +180,26 @@ export const Navbar = () => {
               <Button
                 isExternal
                 as={Link}
-                className='text-md font-normal text-default-600 bg-default-100 p-5 hover:scale-110 hover:duration-800 hover:transition-animate'
+                className='text-md font-normal p-5 hover:scale-105 hover:duration-800 hover:transition-animate'
                 // href={
                 //   siteConfig.navMenuItems.find((item) => item.label === 'Login')
                 //     ?.href
                 // }
                 variant='ghost'
-                onPress={onOpen}
+                onPress={onOpenLogin}
               >
                 Đăng nhập
               </Button>
             </NavbarItem>
             <NavbarItem>
               <Button
-                className='font-medium'
-                color='primary'
+                className='text-md font-normal p-5 hover:scale-105 hover:duration-800 hover:transition-animate'
+                color='secondary'
                 radius='full'
                 variant='flat'
+                onPress={onOpenRegister}
               >
-                Dùng thử miễn phí
+                Đăng ký
               </Button>
             </NavbarItem>
           </>
@@ -224,13 +242,21 @@ export const Navbar = () => {
           ))}
         </div>
       </NavbarMenu>
-      {isOpen && (
+      {isOpenLogin && (
         <LoginModal
-          isOpen={isOpen}
-          onOpenChange={onOpenChange}
+          isOpen={isOpenLogin}
+          onOpenChange={onOpenChangeLogin}
         >
           {/* ...existing code... */}
         </LoginModal>
+      )}
+      {isOpenRegister && (
+        <RegisterModal
+          isOpen={isOpenRegister}
+          onOpenChange={onOpenChangeRegister}
+        >
+          {/* ...existing code... */}
+        </RegisterModal>
       )}
     </HeroUINavbar>
   );

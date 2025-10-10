@@ -1,5 +1,6 @@
 package com.dotnt.server.service.impl;
 
+import com.dotnt.server.dto.ContentBlockDto;
 import com.dotnt.server.dto.OptionDto;
 import com.dotnt.server.dto.request.AutoGenerateExamListRequest;
 import com.dotnt.server.dto.request.AutoGenerateExamRequest;
@@ -13,6 +14,8 @@ import com.dotnt.server.repository.ExamRepository;
 import com.dotnt.server.repository.MatrixRepository;
 import com.dotnt.server.repository.QuestionRepository;
 import com.dotnt.server.service.ExamService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -127,7 +130,7 @@ public class ExamServiceImpl implements ExamService {
                     List<ExamQuestionResponse> questionResponses = exam.getExamQuestions().stream()
                             .map(eq -> ExamQuestionResponse.builder()
                                     .questionId(eq.getQuestion().getId())
-                                    .content(eq.getQuestion().getContent())
+                                    .content(buildContentText(eq.getQuestion()))
                                     .finalPoints(eq.getFinalPoints() != null
                                             ? eq.getFinalPoints()
                                             : eq.getQuestion().getLevel().getPoints())
@@ -247,8 +250,8 @@ public class ExamServiceImpl implements ExamService {
 
                     return ExamQuestionResponse.builder()
                             .questionId(q.getId())
-                            .content(q.getContent())
-                            .finalPoints(eq.getFinalPoints())
+                            .content(buildContentText(q))  // sửa ở đây
+                            .finalPoints(eq.getFinalPoints() != null ? eq.getFinalPoints() : q.getLevel().getPoints())
                             .options(optionDtos)
                             .build();
                 })
@@ -268,7 +271,7 @@ public class ExamServiceImpl implements ExamService {
                 .map(eq -> ExamQuestionResponse.builder()
                         .questionId(eq.getQuestion().getId())
                         .finalPoints(eq.getQuestion().getLevel().getPoints())
-                        .content(eq.getQuestion().getContent())
+                        .content(buildContentText(eq.getQuestion())) // sửa ở đây
                         .build())
                 .collect(Collectors.toList());
 
@@ -280,7 +283,35 @@ public class ExamServiceImpl implements ExamService {
                 .endTime(exam.getEndTime())
                 .questions(questionResponses)
                 .build();
-
     }
+
+    private String buildContentText(Question question) {
+        if (question.getContentJson() == null || question.getContentJson().isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (ContentBlockDto block : question.getContentJson()) {
+            if ("text".equals(block.getType())) {
+                sb.append(block.getValue());
+            } else if ("formula".equals(block.getType())) {
+                sb.append(" [").append(block.getLatex()).append("] ");
+            }
+        }
+        return sb.toString();
+    }
+
+    private String buildExplanationText(Question question) {
+        if (question.getExplanationJson() == null || question.getExplanationJson().isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (ContentBlockDto block : question.getExplanationJson()) {
+            if ("text".equals(block.getType())) {
+                sb.append(block.getValue());
+            } else if ("formula".equals(block.getType())) {
+                sb.append(" [").append(block.getLatex()).append("] ");
+            }
+        }
+        return sb.toString();
+    }
+
 }
 

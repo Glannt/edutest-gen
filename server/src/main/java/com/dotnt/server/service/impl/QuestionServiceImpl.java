@@ -1,14 +1,13 @@
 package com.dotnt.server.service.impl;
 
-import com.dotnt.server.dto.LevelDto;
-import com.dotnt.server.dto.OptionDto;
-import com.dotnt.server.dto.QuestionDto;
-import com.dotnt.server.dto.QuestionTypeDto;
+import com.dotnt.server.dto.*;
 import com.dotnt.server.dto.response.QuestionResponse;
 import com.dotnt.server.entity.Option;
 import com.dotnt.server.entity.Question;
 import com.dotnt.server.repository.*;
 import com.dotnt.server.service.QuestionService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -74,55 +73,58 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public List<QuestionResponse> searchN8n() {
-        // 1️⃣ Gọi n8n để lấy dữ liệu JSON
-        ResponseEntity<Map> response = restTemplate.getForEntity(N8N_URL, Map.class);
-        Map<String, Object> body = response.getBody();
-        if (body == null || !body.containsKey("questions")) {
-            return List.of();
-        }
-
-        // 2️⃣ Lấy danh sách câu hỏi
-        List<Map<String, Object>> questions = (List<Map<String, Object>>) body.get("questions");
-        log.info("questions {}", questions);
-        // 3️⃣ Map từng câu hỏi sang QuestionResponse
-        return questions.stream().map(q -> {
-            String title = (String) q.get("title");
-            String reason = (String) q.get("reason");
-            List<String> rawOptions = (List<String>) q.get("options");
-
-            List<OptionDto> optionDtos = rawOptions.stream()
-                    .map(opt -> {
-                        String[] parts = opt.split("\\.", 2); // Tách "A. nội dung"
-                        String label = parts[0].trim();
-                        String content = parts.length > 1 ? parts[1].trim() : "";
-                        return OptionDto.builder()
-//                                .content(label)
-                                .content(content)
-                                .build();
-                    })
-                    .collect(Collectors.toList());
-
-            return QuestionResponse.builder()
-                    .id(null)
-                    .content(title)
-                    .explanation(reason)
-                    .options(optionDtos)
-                    .isActive(true)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
-        }).collect(Collectors.toList());
+//        // 1️⃣ Gọi n8n để lấy dữ liệu JSON
+//        ResponseEntity<Map> response = restTemplate.getForEntity(N8N_URL, Map.class);
+//        Map<String, Object> body = response.getBody();
+//        if (body == null || !body.containsKey("questions")) {
+//            return List.of();
+//        }
+//
+//        // 2️⃣ Lấy danh sách câu hỏi
+//        List<Map<String, Object>> questions = (List<Map<String, Object>>) body.get("questions");
+//        log.info("questions {}", questions);
+//        // 3️⃣ Map từng câu hỏi sang QuestionResponse
+//        return questions.stream().map(q -> {
+//            String title = (String) q.get("title");
+//            String reason = (String) q.get("reason");
+//            List<String> rawOptions = (List<String>) q.get("options");
+//
+//            List<OptionDto> optionDtos = rawOptions.stream()
+//                    .map(opt -> {
+//                        String[] parts = opt.split("\\.", 2); // Tách "A. nội dung"
+//                        String label = parts[0].trim();
+//                        String content = parts.length > 1 ? parts[1].trim() : "";
+//                        return OptionDto.builder()
+////                                .content(label)
+//                                .content(content)
+//                                .build();
+//                    })
+//                    .collect(Collectors.toList());
+//
+//            return QuestionResponse.builder()
+//                    .id(null)
+//                    .contentJson(title)
+//                    .explanation(reason)
+//                    .options(optionDtos)
+//                    .isActive(true)
+//                    .createdAt(LocalDateTime.now())
+//                    .updatedAt(LocalDateTime.now())
+//                    .build();
+//        }).collect(Collectors.toList());
+        return List.of();
     }
 
     private QuestionResponse toResponse(Question question) {
         return QuestionResponse.builder()
                 .id(question.getId())
-                .content(question.getContent())
+                .contentJson(question.getContentJson())
+                .explanationJson(question.getExplanationJson())
                 .options(question.getOptions().stream()
-                        .map(option -> OptionDto.builder()
-                                .id(option.getId())
-                                .content(option.getContent())
-                                .isCorrect(option.getIsCorrect())
+                        .map(opt -> OptionDto.builder()
+                                .id(opt.getId())
+                                .content(opt.getContent())
+                                .isCorrect(opt.getIsCorrect())
+                                .orderIndex(opt.getOrderIndex())
                                 .build())
                         .collect(Collectors.toList()))
                 .level(LevelDto.builder()
@@ -136,15 +138,16 @@ public class QuestionServiceImpl implements QuestionService {
                         .name(question.getQuestionType().getName())
                         .description(question.getQuestionType().getDescription())
                         .build())
-                .explanation(question.getExplanation())
+                .isActive(true)
+                .createdAt(question.getCreatedAt())
+                .updatedAt(question.getUpdatedAt())
                 .build();
     }
     private Question toEntity(QuestionDto questionDto) {
-        // 1️⃣ Tạo entity Question trước
         Question question = Question.builder()
                 .id(questionDto.getId())
-                .content(questionDto.getContent())
-                .explanation(questionDto.getExplanation())
+                .contentJson(questionDto.getContentJson())
+                .explanationJson(questionDto.getExplanationJson())
                 .lesson(lessonRepository.findById(questionDto.getLessonId())
                         .orElseThrow(() -> new RuntimeException("Lesson not found")))
                 .questionType(questionTypeRepository.findById(questionDto.getQuestionTypeId())
@@ -153,18 +156,14 @@ public class QuestionServiceImpl implements QuestionService {
                         .orElseThrow(() -> new RuntimeException("Level not found")))
                 .build();
 
-        // 2️⃣ Gán options và liên kết ngược lại (Option → Question)
         if (questionDto.getOptions() != null && !questionDto.getOptions().isEmpty()) {
             Set<Option> options = questionDto.getOptions().stream()
-                    .map(optionDto -> {
-                        Option option = Option.builder()
-                                .content(optionDto.getContent())
-                                .isCorrect(optionDto.getIsCorrect())
-                                .orderIndex(optionDto.getOrderIndex())
-                                .question(question) // 🔥 Quan trọng nhất
-                                .build();
-                        return option;
-                    })
+                    .map(optDto -> Option.builder()
+                            .content(optDto.getContent())
+                            .isCorrect(optDto.getIsCorrect())
+                            .orderIndex(optDto.getOrderIndex())
+                            .question(question)
+                            .build())
                     .collect(Collectors.toSet());
             question.setOptions(options);
         }

@@ -5,8 +5,8 @@ import { OptionPayload } from '@/types/option';
 
 export interface QuestionPayload {
   id: number;
-  content: string;
-  explanation?: string;
+  contentJson: ContentBlockPayload[]; // thay cho content string
+  explanationJson?: ContentBlockPayload[]; // thay cho explanation string
   lessonId: number;
   levelId: number;
   questionTypeId: number;
@@ -16,4 +16,11 @@ export interface QuestionPayload {
   options?: Partial<OptionPayload>[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ContentBlockPayload {
+  type: 'text' | 'formula';
+  value?: string; // chỉ dùng khi type=text
+  latex?: string; // chỉ dùng khi type=formula
+  ast?: any; // JSON AST, chỉ dùng khi type=formula
 }
