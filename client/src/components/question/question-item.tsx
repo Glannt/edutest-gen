@@ -19,7 +19,7 @@ interface QuestionItemProps {
 const renderBlocks = (blocks: ContentBlockPayload[]): React.ReactNode[] => {
   return blocks.map((block, idx) => {
     if (block.type === 'text' && block.value) {
-      return <InlineMath key={idx}>{block.value} </InlineMath>;
+      return <span key={idx}>{block.value} </span>;
     }
     if (block.type === 'formula' && block.latex) {
       return <InlineMath key={idx}>{block.latex}</InlineMath>;

@@ -5,7 +5,6 @@ import { ProtectedRoute } from '@/router/ProtectedRoute';
 import IndexPage from '@/pages/index';
 import DashboardPage from '@/pages/dashboard';
 import PricingPage from '@/pages/pricing';
-import BlogPage from '@/pages/blog';
 import AboutPage from '@/pages/about';
 import SubjectPage from '@/pages/subject';
 import LevelPage from '@/pages/level';
@@ -17,6 +16,7 @@ import { QuestionListByLesson } from '@/components/question/question-list-by-les
 import { LessonComponent } from '@/components/lesson/lesson.component';
 import CreateQuestionPage from '@/pages/create-question';
 import ExamPage from '@/pages/exam';
+import FeaturePage from '@/pages/feature';
 
 export function AppRoutes() {
   return (
@@ -31,8 +31,8 @@ export function AppRoutes() {
         path='pricing'
       />
       <Route
-        element={<BlogPage />}
-        path='blog'
+        element={<FeaturePage />}
+        path='feature'
       />
       <Route
         element={<AboutPage />}

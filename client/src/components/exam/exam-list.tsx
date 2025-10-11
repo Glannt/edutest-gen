@@ -12,14 +12,21 @@ import {
   Pagination,
   Spinner,
   useDisclosure,
+  addToast,
 } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
 import { ExamResponse } from '@/types/exam';
-import { usePagedExams, useDeleteExam } from '@/hooks/useExam';
+import {
+  usePagedExams,
+  useDeleteExam,
+  useExportSingleExam,
+  useExportMultipleExams,
+} from '@/hooks/useExam';
 import { ExamViewModal } from '@/components/exam/modal/exam-view-modal';
 import { ExamEditModal } from '@/components/exam/modal/exam-edit-modal';
 import { ExamDeleteModal } from '@/components/exam/modal/exam-delete-modal';
+import { ExportModal } from '@/components/exam/modal/export-modal';
 
 export const ExamList: React.FC = () => {
   const [page, setPage] = useState(0);
@@ -32,6 +39,13 @@ export const ExamList: React.FC = () => {
   const viewModal = useDisclosure();
   const editModal = useDisclosure();
   const deleteModal = useDisclosure();
+  const exportModal = useDisclosure();
+  const [multipleFiles, setMultipleFiles] = useState(false);
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
+  const [singleExamId, setSingleExamId] = useState<string>('');
+
+  const exportSingle = useExportSingleExam();
+  const exportMultiple = useExportMultipleExams();
 
   // Fetch paged exams
   const {
@@ -98,19 +112,119 @@ export const ExamList: React.FC = () => {
 
   const totalPages = examsPage?.totalPages ?? 1;
 
+  const handleOpenExportModal = (isMultiple: boolean) => {
+    setMultipleFiles(isMultiple);
+
+    // Nếu single, chọn mặc định một đề đầu tiên (tuỳ chọn)
+    const firstExamId = examsPage?.content?.[0]?.id?.toString() ?? '';
+
+    if (!isMultiple) {
+      setSingleExamId(firstExamId);
+    } else {
+      setSelectedExams([]);
+    }
+
+    exportModal.onOpen();
+  };
+
+  const handleExport = async () => {
+    try {
+      if (multipleFiles && selectedExams.length > 0) {
+        await handleExportMultiple(selectedExams.map(Number), 'word');
+      } else if (!multipleFiles && singleExamId) {
+        await handleExportSingle(Number(singleExamId), 'word');
+      }
+      addToast({
+        title: 'Đã xuất file' + singleExamId + 'thành công',
+        color: 'success',
+        timeout: 2000,
+      });
+      exportModal.onClose();
+    } catch (error) {
+      addToast({
+        title: 'Đã xuất file' + singleExamId + 'thất bại',
+        color: 'danger',
+        timeout: 2000,
+      });
+    }
+  };
+
+  const handleExportMultiple = async (
+    examIds: number[],
+    format: 'pdf' | 'word'
+  ) => {
+    try {
+      // Lấy mảng URL từ backend
+      const urls = await exportMultiple.mutateAsync({ examIds, format }); // string[]
+
+      // Xác định extension dựa trên format
+      const extension = format === 'pdf' ? 'pdf' : 'docx';
+      const baseUrl = process.env.VITE_API_URL;
+
+      // Download từng file
+      urls.forEach((url, index) => {
+        const link = document.createElement('a');
+
+        link.href = baseUrl + '/' + url;
+        link.download = `exam_${examIds[index]}.${extension}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      });
+    } catch (error) {
+      console.error('Export multiple exams error:', error);
+    }
+  };
+
+  const handleExportSingle = async (examId: number, format: 'pdf' | 'word') => {
+    try {
+      // Gọi API để nhận Blob
+      const blob = await exportSingle.mutateAsync({ examId, format });
+
+      // Xác định extension dựa trên format
+      const extension = format === 'pdf' ? 'pdf' : 'docx';
+
+      // Tạo URL tạm thời từ Blob
+      const url = window.URL.createObjectURL(blob);
+
+      // Tạo <a> để trigger download
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = `exam_${examId}.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Dọn dẹp
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export single exam error:', error);
+    }
+  };
+
   return (
     <div className='flex flex-col gap-4 h-80vh'>
       {/* Header */}
       <div className='flex justify-between items-center mb-4'>
         <h2 className='text-xl font-semibold'>Danh sách đề thi</h2>
-        <Button
-          color='primary'
-          isLoading={isLoading}
-          startContent={<Icon icon='lucide:refresh-cw' />}
-          onPress={() => refetch()}
-        >
-          Làm mới
-        </Button>
+        <div className='flex space-x-2'>
+          <Button
+            color='primary'
+            startContent={<Icon icon='lucide:file-down' />}
+            onPress={() => handleOpenExportModal(true)} // mặc định multiple
+          >
+            Xuất File
+          </Button>
+          <Button
+            color='primary'
+            isLoading={isLoading}
+            startContent={<Icon icon='lucide:refresh-cw' />}
+            onPress={() => refetch()}
+          >
+            Làm mới
+          </Button>
+        </div>
       </div>
 
       {/* Loading */}
@@ -241,6 +355,19 @@ export const ExamList: React.FC = () => {
         isOpen={deleteModal.isOpen}
         onConfirmDelete={handleConfirmDelete}
         onOpenChange={deleteModal.onOpenChange}
+      />
+
+      <ExportModal
+        exams={examsPage?.content || []}
+        handleExport={handleExport}
+        isOpen={exportModal.isOpen}
+        multipleFiles={multipleFiles}
+        selectedExams={selectedExams}
+        setMultipleFiles={setMultipleFiles}
+        setSelectedExams={setSelectedExams}
+        setSingleExamId={setSingleExamId}
+        singleExamId={singleExamId}
+        onOpenChange={() => exportModal.onClose()}
       />
     </div>
   );

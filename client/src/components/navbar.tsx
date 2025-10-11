@@ -101,7 +101,7 @@ export const Navbar = () => {
           <Link
             className='hover:text-primary-600'
             color='foreground'
-            href='#features'
+            href='/feature'
           >
             Tính năng
           </Link>
@@ -119,7 +119,7 @@ export const Navbar = () => {
           <Link
             className='hover:text-primary-600'
             color='foreground'
-            href='#pricing'
+            href='/pricing'
           >
             Bảng giá
           </Link>
