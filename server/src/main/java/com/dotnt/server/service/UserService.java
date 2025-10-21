@@ -1,16 +1,18 @@
 package com.dotnt.server.service;
 
+import com.dotnt.server.dto.UserDto;
 import com.dotnt.server.dto.request.RegisterRequest;
+import com.dotnt.server.dto.response.UserResponse;
 import com.dotnt.server.entity.User;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface UserService {
-    User save(User user);
-    User findById(Long id);
-    List<User> findAll();
+    UserResponse save(UserDto user);
+    UserResponse findById(Long id);
+    Page<UserResponse> findAll(Pageable pageable);
     void deleteById(Long id);
-    User update(User user);
+    UserResponse update(Long id, UserDto user);
     User findByUsernameOrEmail(String username);
     User register(RegisterRequest request);
 }

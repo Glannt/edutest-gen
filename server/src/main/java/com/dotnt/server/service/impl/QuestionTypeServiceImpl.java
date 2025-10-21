@@ -5,6 +5,8 @@ import com.dotnt.server.entity.QuestionType;
 import com.dotnt.server.repository.QuestionTypeRepository;
 import com.dotnt.server.service.QuestionTypeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +24,11 @@ public class QuestionTypeServiceImpl implements QuestionTypeService {
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<QuestionTypeDto> findAllPaged(Pageable pageable) {
+        return questionTypeRepository.findAll(pageable).map(this::toDto);
     }
 
     @Override

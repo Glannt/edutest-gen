@@ -74,4 +74,12 @@ public class ExamController {
     public Page<ExamResponse> getPagedExams(Pageable pageable) {
         return examService.getPaged(pageable);
     }
+    @GetMapping("/{matrixId}/exams")
+    @PagingResponse
+    public Page<ExamResponse> getExamsByMatrix(
+            @PathVariable Long matrixId,
+            Pageable pageable
+    ) {
+        return examService.findByMatrixId(matrixId, pageable);
+    }
 }

@@ -1,6 +1,7 @@
 package com.dotnt.server.service.impl;
 
 import com.dotnt.server.dto.LevelDto;
+import com.dotnt.server.dto.request.MatrixDetailRequest;
 import com.dotnt.server.dto.request.MatrixRequest;
 import com.dotnt.server.dto.response.LessonResponse;
 import com.dotnt.server.dto.response.MatrixDetailResponse;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -72,16 +74,149 @@ public class MatrixServiceImpl implements MatrixService {
     }
 
     @Override
-    public MatrixResponse update(Long id,MatrixRequest matrix) {
-        Matrix exiting = matrixRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Matrix not found with id" + id));
-        return this.toResponse(matrixRepository.save(this.toEntity(matrix)));
+    @Transactional
+    public MatrixResponse update(Long id, MatrixRequest request) {
+        Matrix existing = matrixRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Matrix not found with id: " + id));
+
+        existing.setName(request.getName());
+        existing.setDescription(request.getDescription());
+        existing.setTotalQuestions(request.getTotalQuestions());
+
+        if (request.getUserId() != null) {
+            User user = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
+            existing.setUser(user);
+        }
+
+        // ✅ Xóa toàn bộ detail cũ trên cùng danh sách
+        existing.getMatrixDetails().clear();
+
+        if (request.getMatrixDetails() != null && !request.getMatrixDetails().isEmpty()) {
+            for (MatrixDetailRequest detailReq : request.getMatrixDetails()) {
+                MatrixDetail detail = new MatrixDetail();
+                detail.setMatrix(existing);
+
+                Level level = levelRepository.findById(detailReq.getLevelId())
+                        .orElseThrow(() -> new RuntimeException("Level not found with id: " + detailReq.getLevelId()));
+                Lesson lesson = lessonRepository.findById(detailReq.getLessonId())
+                        .orElseThrow(() -> new RuntimeException("Lesson not found with id: " + detailReq.getLessonId()));
+                QuestionType qType = questionTypeRepository.findById(detailReq.getQuestionTypeId())
+                        .orElseThrow(() -> new RuntimeException("QuestionType not found with id: " + detailReq.getQuestionTypeId()));
+
+                detail.setLevel(level);
+                detail.setLesson(lesson);
+                detail.setQuestionType(qType);
+                detail.setQuestionCount(detailReq.getQuantity());
+
+                // ✅ add trực tiếp vào list đang được quản lý
+                existing.getMatrixDetails().add(detail);
+            }
+        }
+
+        Matrix saved = matrixRepository.save(existing);
+        return this.toResponse(saved);
     }
 
     /**
      * Export 1 ma trận -> Excel
      */
     @Override
+//    public ByteArrayInputStream exportMatrixToExcel(Long matrixId) throws IOException {
+//        Matrix matrix = matrixRepository.findById(matrixId)
+//                .orElseThrow(() -> new RuntimeException("Matrix not found: " + matrixId));
+//
+//        try (Workbook workbook = new XSSFWorkbook()) {
+//            Sheet sheet = workbook.createSheet(matrix.getName());
+//
+//            // ==== STYLE SETUP ====
+//            CellStyle headerStyle = workbook.createCellStyle();
+//            Font headerFont = workbook.createFont();
+//            headerFont.setBold(true);
+//            headerFont.setFontHeightInPoints((short) 11);
+//            headerStyle.setFont(headerFont);
+//            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+//            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+//            headerStyle.setBorderTop(BorderStyle.THIN);
+//            headerStyle.setBorderBottom(BorderStyle.THIN);
+//            headerStyle.setBorderLeft(BorderStyle.THIN);
+//            headerStyle.setBorderRight(BorderStyle.THIN);
+//
+//            CellStyle cellStyle = workbook.createCellStyle();
+//            cellStyle.setAlignment(HorizontalAlignment.CENTER);
+//            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+//            cellStyle.setBorderTop(BorderStyle.THIN);
+//            cellStyle.setBorderBottom(BorderStyle.THIN);
+//            cellStyle.setBorderLeft(BorderStyle.THIN);
+//            cellStyle.setBorderRight(BorderStyle.THIN);
+//
+//            int rowIdx = 0;
+//
+//            // ==== TIÊU ĐỀ CHÍNH ====
+//            Row titleRow = sheet.createRow(rowIdx++);
+//            Cell titleCell = titleRow.createCell(0);
+//            titleCell.setCellValue("Ma trận đề thi: " + matrix.getName());
+//            titleCell.setCellStyle(headerStyle);
+//            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
+//
+//            rowIdx++; // dòng trống
+//
+//            // ==== HEADER ====
+//            Row header = sheet.createRow(rowIdx++);
+//            String[] headers = {"Chương", "Chủ đề", "Cấp độ tư duy - Biết", "Hiểu", "VD", "Tổng", "Tỉ lệ (%)"};
+//            for (int i = 0; i < headers.length; i++) {
+//                Cell cell = header.createCell(i);
+//                cell.setCellValue(headers[i]);
+//                cell.setCellStyle(headerStyle);
+//            }
+//
+//            // ==== DỮ LIỆU CHI TIẾT ====
+//            double totalPercent = 0;
+//            int totalQuestion = 0;
+//
+//            for (MatrixDetail detail : matrix.getMatrixDetails()) {
+//                Row row = sheet.createRow(rowIdx++);
+//
+//                String lessonName = detail.getLesson() != null ? detail.getLesson().getName() : "-";
+//                String chapterName = detail.getLesson()
+//                        != null ? detail.getLesson().getChapter().getName() : "-";
+//                String levelName = detail.getLevel() != null ? detail.getLevel().getName() : "-";
+//                Integer qCount = detail.getQuestionCount() != null ? detail.getQuestionCount() : 0;
+//                Double percent = detail.getPercent() != null ? detail.getPercent() : 0.0;
+//
+//                row.createCell(0).setCellValue(chapterName);
+//                row.createCell(1).setCellValue(lessonName);
+//                row.createCell(2).setCellValue(levelName.contains("Biết") ? qCount : 0);
+//                row.createCell(3).setCellValue(levelName.contains("Hiểu") ? qCount : 0);
+//                row.createCell(4).setCellValue(levelName.contains("VD") ? qCount : 0);
+//                row.createCell(5).setCellValue(qCount);
+//                row.createCell(6).setCellValue(percent);
+//
+//                for (int i = 0; i <= 6; i++) row.getCell(i).setCellStyle(cellStyle);
+//
+//                totalQuestion += qCount;
+//                totalPercent += percent;
+//            }
+//
+//            // ==== DÒNG TỔNG ====
+//            Row totalRow = sheet.createRow(rowIdx++);
+//            Cell totalLabel = totalRow.createCell(1);
+//            totalLabel.setCellValue("Tổng");
+//            totalLabel.setCellStyle(headerStyle);
+//            totalRow.createCell(5).setCellValue(totalQuestion);
+//            totalRow.createCell(6).setCellValue(totalPercent);
+//            for (int i = 0; i <= 6; i++) {
+//                if (totalRow.getCell(i) == null) totalRow.createCell(i);
+//                totalRow.getCell(i).setCellStyle(headerStyle);
+//            }
+//
+//            for (int i = 0; i <= 6; i++) sheet.autoSizeColumn(i);
+//
+//            ByteArrayOutputStream out = new ByteArrayOutputStream();
+//            workbook.write(out);
+//            return new ByteArrayInputStream(out.toByteArray());
+//        }
+//    }
     public ByteArrayInputStream exportMatrixToExcel(Long matrixId) throws IOException {
         Matrix matrix = matrixRepository.findById(matrixId)
                 .orElseThrow(() -> new RuntimeException("Matrix not found: " + matrixId));
@@ -101,6 +236,7 @@ public class MatrixServiceImpl implements MatrixService {
             headerStyle.setBorderBottom(BorderStyle.THIN);
             headerStyle.setBorderLeft(BorderStyle.THIN);
             headerStyle.setBorderRight(BorderStyle.THIN);
+            headerStyle.setWrapText(true);
 
             CellStyle cellStyle = workbook.createCellStyle();
             cellStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -115,67 +251,109 @@ public class MatrixServiceImpl implements MatrixService {
             // ==== TIÊU ĐỀ CHÍNH ====
             Row titleRow = sheet.createRow(rowIdx++);
             Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue("Ma trận đề thi: " + matrix.getName());
+            titleCell.setCellValue("MA TRẬN ĐỀ THI: " + matrix.getName());
             titleCell.setCellStyle(headerStyle);
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 14)); // gộp từ cột 0 đến 14
 
             rowIdx++; // dòng trống
 
-            // ==== HEADER ====
-            Row header = sheet.createRow(rowIdx++);
-            String[] headers = {"Chương", "Chủ đề", "Cấp độ tư duy - Biết", "Hiểu", "VD", "Tổng", "Tỉ lệ (%)"};
-            for (int i = 0; i < headers.length; i++) {
-                Cell cell = header.createCell(i);
-                cell.setCellValue(headers[i]);
-                cell.setCellStyle(headerStyle);
+            // ==== HEADER 3 TẦNG ====
+            Row header1 = sheet.createRow(rowIdx++);
+            Row header2 = sheet.createRow(rowIdx++);
+            Row header3 = sheet.createRow(rowIdx++);
+
+            // --- Tầng 1 ---
+            createHeaderCell(header1, 0, "CHƯƠNG", headerStyle);
+            sheet.addMergedRegion(new CellRangeAddress(2, 4, 0, 0));
+
+            createHeaderCell(header1, 1, "NỘI DUNG/ĐƠN VỊ KIẾN THỨC", headerStyle);
+            sheet.addMergedRegion(new CellRangeAddress(2, 4, 1, 1));
+
+            createHeaderCell(header1, 2, "MỨC ĐỘ NHẬN THỨC", headerStyle);
+            sheet.addMergedRegion(new CellRangeAddress(2, 2, 2, 10));
+
+            createHeaderCell(header1, 11, "TỔNG SỐ CÂU HỎI", headerStyle);
+            sheet.addMergedRegion(new CellRangeAddress(2, 2, 11, 13));
+
+            createHeaderCell(header1, 14, "TỔNG ĐIỂM %", headerStyle);
+            sheet.addMergedRegion(new CellRangeAddress(2, 4, 14, 14));
+
+            // --- Tầng 2 ---
+            String[] levelGroups = {"NB", "TH", "VD"};
+            int col = 2;
+            for (String group : levelGroups) {
+                createHeaderCell(header2, col, group, headerStyle);
+                sheet.addMergedRegion(new CellRangeAddress(3, 3, col, col + 2));
+                col += 3;
+            }
+
+            String[] totalGroup = {"TN", "D-S", "TL-N"};
+            for (int i = 0; i < totalGroup.length; i++) {
+                createHeaderCell(header2, 11 + i, totalGroup[i], headerStyle);
+                sheet.addMergedRegion(new CellRangeAddress(3, 4, 11 + i, 11 + i));
+            }
+
+            // --- Tầng 3 ---
+            String[] subCols = {"TN", "D-S", "TL-N", "TN", "D-S", "TL-N", "TN", "D-S", "TL-N"};
+            for (int i = 0; i < subCols.length; i++) {
+                createHeaderCell(header3, 2 + i, subCols[i], headerStyle);
             }
 
             // ==== DỮ LIỆU CHI TIẾT ====
-            double totalPercent = 0;
-            int totalQuestion = 0;
-
             for (MatrixDetail detail : matrix.getMatrixDetails()) {
                 Row row = sheet.createRow(rowIdx++);
 
+                String chapterName = detail.getLesson() != null ? detail.getLesson().getChapter().getName() : "-";
                 String lessonName = detail.getLesson() != null ? detail.getLesson().getName() : "-";
-                String chapterName = detail.getLesson()
-                        != null ? detail.getLesson().getChapter().getName() : "-";
                 String levelName = detail.getLevel() != null ? detail.getLevel().getName() : "-";
                 Integer qCount = detail.getQuestionCount() != null ? detail.getQuestionCount() : 0;
                 Double percent = detail.getPercent() != null ? detail.getPercent() : 0.0;
 
                 row.createCell(0).setCellValue(chapterName);
                 row.createCell(1).setCellValue(lessonName);
-                row.createCell(2).setCellValue(levelName.contains("Biết") ? qCount : 0);
-                row.createCell(3).setCellValue(levelName.contains("Hiểu") ? qCount : 0);
-                row.createCell(4).setCellValue(levelName.contains("VD") ? qCount : 0);
-                row.createCell(5).setCellValue(qCount);
-                row.createCell(6).setCellValue(percent);
 
-                for (int i = 0; i <= 6; i++) row.getCell(i).setCellStyle(cellStyle);
+                // mapping theo cấp độ
+                if (levelName.contains("NB")) row.createCell(2).setCellValue(qCount);
+                if (levelName.contains("TH")) row.createCell(5).setCellValue(qCount);
+                if (levelName.contains("VD")) row.createCell(8).setCellValue(qCount);
 
-                totalQuestion += qCount;
-                totalPercent += percent;
+                // Tổng giả lập (có thể thay bằng tính toán thực)
+                row.createCell(11).setCellValue(qCount);
+                row.createCell(14).setCellValue(percent);
+
+                for (int i = 0; i <= 14; i++) {
+                    if (row.getCell(i) == null) row.createCell(i);
+                    row.getCell(i).setCellStyle(cellStyle);
+                }
             }
 
             // ==== DÒNG TỔNG ====
             Row totalRow = sheet.createRow(rowIdx++);
-            Cell totalLabel = totalRow.createCell(1);
-            totalLabel.setCellValue("Tổng");
-            totalLabel.setCellStyle(headerStyle);
-            totalRow.createCell(5).setCellValue(totalQuestion);
-            totalRow.createCell(6).setCellValue(totalPercent);
-            for (int i = 0; i <= 6; i++) {
+            totalRow.createCell(1).setCellValue("TỔNG");
+            totalRow.getCell(1).setCellStyle(headerStyle);
+
+            // ví dụ gán tổng cộng
+            totalRow.createCell(11).setCellValue(matrix.getTotalQuestions());
+            totalRow.createCell(14).setCellValue(100.0);
+
+            for (int i = 0; i <= 14; i++) {
                 if (totalRow.getCell(i) == null) totalRow.createCell(i);
                 totalRow.getCell(i).setCellStyle(headerStyle);
             }
 
-            for (int i = 0; i <= 6; i++) sheet.autoSizeColumn(i);
+            for (int i = 0; i <= 14; i++) sheet.autoSizeColumn(i);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         }
+    }
+
+    /** Hàm helper để tạo ô header */
+    private void createHeaderCell(Row row, int col, String value, CellStyle style) {
+        Cell cell = row.createCell(col);
+        cell.setCellValue(value);
+        cell.setCellStyle(style);
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.dotnt.server.entity;
 
+import com.dotnt.server.converter.ContentBlockConverter;
+import com.dotnt.server.dto.ContentBlockDto;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -7,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "options")
@@ -21,8 +24,9 @@ public class Option extends BaseEntity {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    @Column(columnDefinition = "TEXT")
-    private String content;
+    @Convert(converter = ContentBlockConverter.class)
+    @Column(name = "content_json", columnDefinition = "JSON", nullable = false)
+    private List<ContentBlockDto> contentJson;
 
     @Column(name = "is_correct", nullable = false)
     @Builder.Default

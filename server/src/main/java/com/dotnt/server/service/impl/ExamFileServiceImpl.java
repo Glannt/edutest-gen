@@ -119,8 +119,19 @@ public class ExamFileServiceImpl implements ExamFileService {
             for (Option opt : options) {
                 XWPFParagraph optPara = doc.createParagraph();
                 XWPFRun optRun = optPara.createRun();
-                optRun.setText("   " + label++ + ". " + opt.getContent());
+                String contentText = opt.getContentJson().stream()
+                        .map(block ->{
+                            if("formula".equals(block.getType()) && block.getLatex() != null){
+                                return "$" + block.getLatex() + "$";
+                            } else if ("text".equals(block.getType()) && block.getValue() != null) {
+                                return block.getValue();
+                            }
+                            return "";
+                        })
+                        .collect(Collectors.joining(" "));
+                optRun.setText("   " + label++ + ". " + contentText);
             }
+
 
             // --- Giải thích (nếu có) ---
             if (q.getExplanationJson() != null && !q.getExplanationJson().isEmpty()) {
@@ -156,7 +167,17 @@ public class ExamFileServiceImpl implements ExamFileService {
             options.sort(Comparator.comparing(Option::getOrderIndex));
             char label = 'A';
             for (Option opt : options) {
-                pdfDoc.add(new com.itextpdf.text.Paragraph("   " + label++ + ". " + opt.getContent()));
+                String contentText = opt.getContentJson().stream()
+                                .map(block -> {
+                                    if("formula".equals(block.getType()) && block.getLatex() != null){
+                                        return "$" + block.getLatex() + "$";
+                                    } else if ("text".equals(block.getType()) && block.getValue() != null) {
+                                        return block.getValue();
+                                    }
+                                    return "";
+                                })
+                                        .collect(Collectors.joining(" "));
+                pdfDoc.add(new com.itextpdf.text.Paragraph("   " + label++ + ". " + contentText));
             }
 
             // --- Giải thích ---
@@ -200,7 +221,17 @@ public class ExamFileServiceImpl implements ExamFileService {
                 options.sort(Comparator.comparing(Option::getOrderIndex));
                 char label = 'A';
                 for (Option opt : options) {
-                    pdfDoc.add(new com.itextpdf.text.Paragraph("   " + label++ + ". " + opt.getContent()));
+                    String contentText = opt.getContentJson().stream()
+                            .map(block -> {
+                                if("formula".equals(block.getType()) && block.getLatex() != null){
+                                    return "$" + block.getLatex() + "$";
+                                } else if ("text".equals(block.getType()) && block.getValue() != null) {
+                                    return block.getValue();
+                                }
+                                return "";
+                            })
+                            .collect(Collectors.joining(" "));
+                    pdfDoc.add(new com.itextpdf.text.Paragraph("   " + label++ + ". " + contentText));
                 }
 
                 // Giải thích (nếu có)

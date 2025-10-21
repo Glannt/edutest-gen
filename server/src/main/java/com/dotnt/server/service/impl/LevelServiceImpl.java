@@ -6,6 +6,8 @@ import com.dotnt.server.entity.Level;
 import com.dotnt.server.repository.LevelRepository;
 import com.dotnt.server.service.LevelService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +60,11 @@ public class LevelServiceImpl implements LevelService {
             throw new RuntimeException("Level not found with id " + id);
         }
         levelRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<LevelDto> findAllPaged(Pageable pageable) {
+        return levelRepository.findAll(pageable).map(this::toDto);
     }
 
     // ===================== MAPPING =====================

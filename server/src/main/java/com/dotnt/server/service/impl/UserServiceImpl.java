@@ -1,14 +1,16 @@
 package com.dotnt.server.service.impl;
 
+import com.dotnt.server.dto.UserDto;
 import com.dotnt.server.dto.request.RegisterRequest;
+import com.dotnt.server.dto.response.UserResponse;
 import com.dotnt.server.entity.User;
 import com.dotnt.server.repository.UserRepository;
 import com.dotnt.server.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,32 +19,47 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public User save(User user) {
-        return userRepository.save(user);
+    public UserResponse save(UserDto user) {
+        return this.toResponse(userRepository.save(User.builder()
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .fullName(user.getFullName())
+                .isActive(user.getIsActive())
+                .password(passwordEncoder.encode(user.getPassword()))
+                .build()));
     }
 
     @Override
-    public User findById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public UserResponse findById(Long id) {
+        return this.toResponse(userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found")));
     }
 
     @Override
-    public List<User> findAll() {
-        return userRepository.findAll();
+    public Page<UserResponse> findAll(Pageable pageable) {
+        return userRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
     public void deleteById(Long id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setActive(false);
     }
 
     @Override
-    public User update(User user) {
-        if (user.getId() == null) {
-            throw new RuntimeException("User ID cannot be null for update");
+    public UserResponse update(Long id, UserDto user) {
+        User existingUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        if(!existingUser.getFullName().equals(user.getFullName())) {
+            existingUser.setFullName(user.getFullName());
         }
-        return userRepository.save(user);
+        if(!existingUser.getRole().equals(user.getRole())) {
+            existingUser.setRole(user.getRole());
+        }
+        if(!existingUser.isActive() == user.getIsActive()){
+            existingUser.setActive(user.getIsActive());
+        }
+        return this.toResponse(userRepository.save(existingUser));
     }
 
     @Override
@@ -61,4 +78,21 @@ public class UserServiceImpl implements UserService {
                 .build();
         return userRepository.save(user);
     }
+
+    private UserResponse toResponse(User entity) {
+        if (entity == null) return null;
+
+        return UserResponse.builder()
+                .id(entity.getId())
+                .username(entity.getUsername())
+                .email(entity.getEmail())
+                .fullName(entity.getFullName())
+                .role(entity.getRole())
+                .isActive(entity.isActive())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+
 }

@@ -9,9 +9,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "questions")
@@ -55,10 +53,10 @@ public class Question extends BaseEntity {
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonManagedReference
-    private Set<Option> options = new HashSet<>();
+    private List<Option> options = new LinkedList<>();
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonManagedReference
-    private Set<ExamQuestion> examQuestions = new HashSet<>();
+    private List<ExamQuestion> examQuestions = new ArrayList<>();
 }

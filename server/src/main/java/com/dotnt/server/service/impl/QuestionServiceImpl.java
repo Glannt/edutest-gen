@@ -1,6 +1,7 @@
 package com.dotnt.server.service.impl;
 
 import com.dotnt.server.dto.*;
+import com.dotnt.server.dto.request.VietjackRequest;
 import com.dotnt.server.dto.response.QuestionResponse;
 import com.dotnt.server.entity.Option;
 import com.dotnt.server.entity.Question;
@@ -10,15 +11,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,8 +36,19 @@ public class QuestionServiceImpl implements QuestionService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     private static final String N8N_URL = "http://localhost:5678/webhook/search-questions-vietjack";
+    private static final Pattern FORMULA_PATTERN = Pattern.compile(
+            ".*([0-9a-zA-Z√∑∫π±×÷≠≥≤^/()*=]+).*"
+    );
     @Override
     public QuestionResponse save(QuestionDto request) {
+        if (request.getOptions() != null) {
+            System.out.println("📌 QuestionDto Options:");
+            request.getOptions().forEach(opt ->
+                    System.out.println("OrderIndex: " + opt.getOrderIndex()
+                            + ", isCorrect: " + opt.getIsCorrect()
+                            + ", content: " + opt.getContent())
+            );
+        }
         return this.toResponse(questionRepository.save(this.toEntity(request)));
     }
 
@@ -72,47 +86,73 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<QuestionResponse> searchN8n() {
-//        // 1️⃣ Gọi n8n để lấy dữ liệu JSON
-//        ResponseEntity<Map> response = restTemplate.getForEntity(N8N_URL, Map.class);
-//        Map<String, Object> body = response.getBody();
-//        if (body == null || !body.containsKey("questions")) {
-//            return List.of();
-//        }
-//
-//        // 2️⃣ Lấy danh sách câu hỏi
-//        List<Map<String, Object>> questions = (List<Map<String, Object>>) body.get("questions");
-//        log.info("questions {}", questions);
-//        // 3️⃣ Map từng câu hỏi sang QuestionResponse
-//        return questions.stream().map(q -> {
-//            String title = (String) q.get("title");
-//            String reason = (String) q.get("reason");
-//            List<String> rawOptions = (List<String>) q.get("options");
-//
-//            List<OptionDto> optionDtos = rawOptions.stream()
-//                    .map(opt -> {
-//                        String[] parts = opt.split("\\.", 2); // Tách "A. nội dung"
-//                        String label = parts[0].trim();
-//                        String content = parts.length > 1 ? parts[1].trim() : "";
-//                        return OptionDto.builder()
-////                                .content(label)
-//                                .content(content)
-//                                .build();
-//                    })
-//                    .collect(Collectors.toList());
-//
-//            return QuestionResponse.builder()
-//                    .id(null)
-//                    .contentJson(title)
-//                    .explanation(reason)
-//                    .options(optionDtos)
-//                    .isActive(true)
-//                    .createdAt(LocalDateTime.now())
-//                    .updatedAt(LocalDateTime.now())
-//                    .build();
-//        }).collect(Collectors.toList());
-        return List.of();
+    public List<QuestionResponse> searchN8n(VietjackRequest request) {
+        // 1️⃣ Chuẩn bị request tới n8n
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(N8N_URL)
+                .queryParam("grade", request.getGrade())
+                .queryParam("subject", request.getSubject())
+                .queryParam("chapter", request.getChapter())
+                .queryParam("lesson", request.getLesson())
+                .queryParam("type", request.getType());
+
+// 2️⃣ Gửi GET request tới n8n
+        ResponseEntity<Map> response = restTemplate.getForEntity(builder.toUriString(), Map.class);
+        Map<String, Object> result = response.getBody();
+
+        if (result == null || !result.containsKey("questions")) {
+            return List.of();
+        }
+
+        // 2️⃣ Lấy danh sách câu hỏi
+        List<Map<String, Object>> questions = (List<Map<String, Object>>) result.get("questions");
+
+        return questions.stream().map(q -> {
+            // 🟩 Lấy dữ liệu cơ bản
+            String title = (String) q.get("title");
+            String answerTrue = (String) q.get("answerTrue");
+            List<String> rawOptions = (List<String>) q.get("options");
+
+            // 🟩 Làm sạch danh sách đáp án (loại bỏ A., B., ...)
+            List<String> cleanedOptions = rawOptions.stream()
+                    .map(opt -> opt.replaceFirst("^[A-D]\\.?\\s*", "").trim())
+                    .collect(Collectors.toList());
+
+            // 🟩 Xác định đáp án đúng dựa vào nội dung
+            String normalizedAnswer = answerTrue != null
+                    ? answerTrue.replaceFirst("^[A-D]\\.?\\s*", "").trim()
+                    : "";
+
+            // 🟩 Map sang OptionDto (và đánh dấu đáp án đúng)
+            List<OptionDto> optionDtos = cleanedOptions.stream()
+                    .map(opt -> OptionDto.builder()
+                            .content(parseTextToContentBlocks(opt))
+                            .isCorrect(opt.equalsIgnoreCase(normalizedAnswer))
+                            .build())
+                    .collect(Collectors.toList());
+
+            // 🟩 Map title sang ContentBlockDto (vì QuestionResponse dùng List<ContentBlockDto>)
+            List<ContentBlockDto> contentBlocks = List.of(
+                    ContentBlockDto.builder()
+                            .type("text")
+                            .value(title)
+                            .build()
+            );
+
+            // 🟩 Build QuestionResponse
+            return QuestionResponse.builder()
+                    .id(null)
+                    .contentJson(contentBlocks)
+                    .explanationJson(List.of()) // chưa có reason, để rỗng
+                    .options(optionDtos)
+                    .isActive(true)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+        }).collect(Collectors.toList());
     }
+
 
     private QuestionResponse toResponse(Question question) {
         return QuestionResponse.builder()
@@ -122,7 +162,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .options(question.getOptions().stream()
                         .map(opt -> OptionDto.builder()
                                 .id(opt.getId())
-                                .content(opt.getContent())
+                                .content(opt.getContentJson())
                                 .isCorrect(opt.getIsCorrect())
                                 .orderIndex(opt.getOrderIndex())
                                 .build())
@@ -157,17 +197,45 @@ public class QuestionServiceImpl implements QuestionService {
                 .build();
 
         if (questionDto.getOptions() != null && !questionDto.getOptions().isEmpty()) {
-            Set<Option> options = questionDto.getOptions().stream()
+            List<Option> options = questionDto.getOptions().stream()
+                    .filter(optDto -> optDto.getContent() != null && !optDto.getContent().isEmpty())
                     .map(optDto -> Option.builder()
-                            .content(optDto.getContent())
+                            .contentJson(optDto.getContent())
                             .isCorrect(optDto.getIsCorrect())
                             .orderIndex(optDto.getOrderIndex())
                             .question(question)
                             .build())
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toList());
             question.setOptions(options);
         }
 
         return question;
+    }
+
+    private List<ContentBlockDto> parseTextToContentBlocks(String text) {
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
+
+        String[] parts = text.trim().split("\\s+");
+
+        return Arrays.stream(parts)
+                .map(word -> {
+                    String type = detectContentType(word);
+                    return ContentBlockDto.builder()
+                            .type(type)
+                            .value(word)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String detectContentType(String word) {
+        // Nếu chứa ký tự toán học hoặc biểu thức, coi là formula
+        if (FORMULA_PATTERN.matcher(word).matches() &&
+                word.matches(".*[0-9√∑∫π±×÷≠≥≤^/()*=].*")) {
+            return "formula";
+        }
+        return "text";
     }
 }

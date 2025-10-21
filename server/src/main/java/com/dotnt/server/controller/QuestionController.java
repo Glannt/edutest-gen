@@ -2,6 +2,7 @@ package com.dotnt.server.controller;
 
 import com.dotnt.server.annotation.RestResponse;
 import com.dotnt.server.dto.QuestionDto;
+import com.dotnt.server.dto.request.VietjackRequest;
 import com.dotnt.server.dto.response.ApiResponse;
 import com.dotnt.server.dto.response.QuestionResponse;
 import com.dotnt.server.service.QuestionService;
@@ -19,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -100,8 +102,8 @@ public class QuestionController {
     }
 
     @GetMapping("/n8n")
-    public List<QuestionResponse> getQuestionsFromN8n() {
-        return questionService.searchN8n();
+    public List<QuestionResponse> getQuestionsFromN8n(@ModelAttribute VietjackRequest request) {
+         return questionService.searchN8n(request);
     }
 
     @GetMapping("lessons/{lessonId}/questions")

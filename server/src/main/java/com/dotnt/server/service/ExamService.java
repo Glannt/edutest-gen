@@ -23,4 +23,5 @@ public interface ExamService {
 
     ExamResponse autoGenerateExam(AutoGenerateExamRequest request);
     List<ExamResponse> autoGenerateExamList(AutoGenerateExamListRequest request);
+    Page<ExamResponse> findByMatrixId(Long matrixId, Pageable pageable);
 }

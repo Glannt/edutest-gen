@@ -9,6 +9,8 @@ import com.dotnt.server.repository.LessonRepository;
 import com.dotnt.server.repository.UserRepository;
 import com.dotnt.server.service.GradeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,11 +76,19 @@ public class GradeServiceImpl implements GradeService {
     }
 
     @Override
+    public Page<GradeResponse> findAllPaged(Pageable pageable) {
+        return gradeRepository.findAll(pageable)
+                .map(this::convertToResponse);
+    }
+
+    @Override
     public List<GradeResponse> findAll() {
         return gradeRepository.findAll().stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
+
+
 
     @Override
     @Transactional

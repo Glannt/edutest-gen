@@ -2,9 +2,14 @@ package com.dotnt.server.controller;
 
 import com.dotnt.server.annotation.RestResponse;
 import com.dotnt.server.dto.QuestionTypeDto;
+import com.dotnt.server.dto.response.GradeResponse;
 import com.dotnt.server.service.QuestionTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -30,6 +35,21 @@ public class QuestionTypeController {
     public QuestionTypeDto getQuestionTypeById(@PathVariable Long id) {
         return questionTypeService.findById(id)
                 .orElseThrow(() -> new RuntimeException("QuestionType not found with id " + id));
+    }
+
+    @GetMapping("paged")
+    public Page<QuestionTypeDto> findAllPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending()
+        );
+        return questionTypeService.findAllPaged(pageable);
     }
 
     @PostMapping

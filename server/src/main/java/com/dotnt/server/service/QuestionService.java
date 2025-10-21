@@ -1,9 +1,11 @@
 package com.dotnt.server.service;
 
 import com.dotnt.server.dto.QuestionDto;
+import com.dotnt.server.dto.request.VietjackRequest;
 import com.dotnt.server.dto.response.QuestionResponse;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface QuestionService {
@@ -13,5 +15,5 @@ public interface QuestionService {
     void deleteById(Long id);
     QuestionResponse update(Long id, QuestionDto question);
     List<QuestionResponse> findByLessonId(Long lessonId);
-    List<QuestionResponse> searchN8n();
+    List<QuestionResponse> searchN8n(VietjackRequest request);
 }

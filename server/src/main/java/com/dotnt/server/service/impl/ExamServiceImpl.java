@@ -17,6 +17,7 @@ import com.dotnt.server.service.ExamService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -227,6 +228,12 @@ public class ExamServiceImpl implements ExamService {
         return responses;
     }
 
+    @Override
+    public Page<ExamResponse> findByMatrixId(Long matrixId, Pageable pageable) {
+        Page<Exam> exams = examRepository.findByMatrix_Id(matrixId, pageable);
+        return exams.map(this::mapToResponse);
+    }
+
 
     private ExamResponse mapToResponseWithOptions(Exam exam, boolean shuffleOptions) {
         List<ExamQuestionResponse> questionResponses = exam.getExamQuestions().stream()
@@ -242,7 +249,7 @@ public class ExamServiceImpl implements ExamService {
                     List<OptionDto> optionDtos = options.stream()
                             .map(opt -> OptionDto.builder()
                                     .id(opt.getId())
-                                    .content(opt.getContent())
+                                    .content(opt.getContentJson())
                                     .isCorrect(opt.getIsCorrect())
                                     .orderIndex(opt.getOrderIndex())
                                     .build())
@@ -265,6 +272,8 @@ public class ExamServiceImpl implements ExamService {
                 .questions(questionResponses)
                 .build();
     }
+
+
 
     private ExamResponse mapToResponse(Exam exam) {
         List<ExamQuestionResponse> questionResponses = exam.getExamQuestions().stream()

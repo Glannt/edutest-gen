@@ -55,7 +55,7 @@ public class OptionServiceImpl implements OptionService {
                 .orElseThrow(() -> new EntityNotFoundException("Option not found with id " + id));
 
         // Update fields
-        existing.setContent(optionDto.getContent());
+        existing.setContentJson(optionDto.getContent());
         existing.setIsCorrect(optionDto.getIsCorrect());
         existing.setOrderIndex(optionDto.getOrderIndex());
         existing.setUpdatedAt(LocalDateTime.now());
@@ -67,7 +67,7 @@ public class OptionServiceImpl implements OptionService {
     private OptionDto toDto(Option option) {
         return OptionDto.builder()
                 .id(option.getId())
-                .content(option.getContent())
+                .content(option.getContentJson())
                 .isCorrect(option.getIsCorrect())
                 .orderIndex(option.getOrderIndex())
                 .createdAt(option.getCreatedAt())
@@ -78,7 +78,7 @@ public class OptionServiceImpl implements OptionService {
     private Option toEntity(OptionDto dto) {
         Option option = new Option();
         option.setId(dto.getId());
-        option.setContent(dto.getContent());
+        option.setContentJson(dto.getContent());
         option.setIsCorrect(dto.getIsCorrect());
         option.setOrderIndex(dto.getOrderIndex());
         option.setCreatedAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : LocalDateTime.now());

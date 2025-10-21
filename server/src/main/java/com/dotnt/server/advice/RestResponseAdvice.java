@@ -20,19 +20,7 @@ public class RestResponseAdvice implements ResponseBodyAdvice<Object> {
         return returnType.getContainingClass().isAnnotationPresent(RestResponse.class)
                 || returnType.hasMethodAnnotation(RestResponse.class);
     }
-//
-//    @Override
-//    public Object beforeBodyWrite(Object body,
-//                                  MethodParameter returnType,
-//                                  MediaType selectedContentType,
-//                                  Class<? extends HttpMessageConverter<?>> selectedConverterType,
-//                                  ServerHttpRequest request,
-//                                  ServerHttpResponse response) {
-//        if (body instanceof RestResponseWrapper) {
-//            return body; // đã wrap rồi thì giữ nguyên
-//        }
-//        return RestResponseWrapper.success(body);
-//    }
+
 
     @Override
     public Object beforeBodyWrite(Object body,
