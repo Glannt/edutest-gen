@@ -10,7 +10,7 @@ import {
   ModalFooter,
 } from '@heroui/modal';
 import { Button } from '@heroui/button';
-import { addToast, CircularProgress, Spacer } from '@heroui/react';
+import { addToast, Spacer } from '@heroui/react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -91,7 +91,7 @@ export default function LoginModal(props: LoginModalProps) {
           // Điều hướng theo role
           switch (user.role) {
             case 'ADMIN':
-              navigate('/admin/dashboard');
+              navigate('/admin');
               break;
             case 'TEACHER':
               navigate('/dashboard');
@@ -208,13 +208,10 @@ export default function LoginModal(props: LoginModalProps) {
                   className='w-xl'
                   color='primary'
                   disabled={loginMutation.isPending}
+                  isLoading={loginMutation.isPending}
                   type='submit'
                 >
-                  {loginMutation.isPending ? (
-                    <CircularProgress label='Đang đăng nhập...' />
-                  ) : (
-                    'Đăng nhập'
-                  )}
+                  Đăng nhập
                 </Button>
               </form>
             </ModalFooter>

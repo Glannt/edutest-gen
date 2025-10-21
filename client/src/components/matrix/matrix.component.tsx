@@ -3,10 +3,6 @@ import { Card, Button, Tabs, Tab, addToast } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
 import { TestStructure } from '@/components/matrix/test-structure';
-import { TestInformation } from '@/components/matrix/test-information';
-import { KnowledgeSources } from '@/components/matrix/knowledge-sources';
-import { QuestionBank } from '@/components/matrix/question-bank';
-import { DataManagement } from '@/components/matrix/data-management';
 import { useMatrixStore } from '@/store/matrix.store';
 import { TestMatrixDynamic } from '@/components/matrix/test-matrix';
 import { TestStructureCard } from '@/components/matrix/test-structure-card';
@@ -82,11 +78,11 @@ export default function MatrixComponent() {
                 <TestStructure />
               </Card>
 
-              <Card className='shadow-sm'>
+              {/* <Card className='shadow-sm'>
                 <TestInformation />
-              </Card>
+              </Card> */}
 
-              <Card className='shadow-sm'>
+              {/* <Card className='shadow-sm'>
                 <KnowledgeSources />
               </Card>
 
@@ -96,7 +92,7 @@ export default function MatrixComponent() {
 
               <Card className='shadow-sm'>
                 <DataManagement />
-              </Card>
+              </Card> */}
 
               <Button
                 className='w-full py-3 font-medium'

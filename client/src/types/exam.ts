@@ -57,4 +57,6 @@ export interface ExamResponse {
   startTime?: string;
   endTime?: string;
   questions?: ExamQuestionResponse[];
+  createdAt?: string;
+  updatedAt?: string;
 }

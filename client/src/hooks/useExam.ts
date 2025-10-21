@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
   UseMutationResult,
+  keepPreviousData,
 } from '@tanstack/react-query';
 
 import {
@@ -19,6 +20,24 @@ export const usePagedExams = (page = 0, size = 10) =>
   useQuery<PageResponse<ExamResponse>>({
     queryKey: ['exams', page, size],
     queryFn: () => examService.getPaged(page, size),
+  });
+
+/**
+ * Hook lấy danh sách exam theo Matrix ID (có phân trang)
+ * @param matrixId ID của Matrix
+ * @param page Số trang (bắt đầu từ 0)
+ * @param size Kích thước mỗi trang
+ */
+export const usePagedExamsByMatrixId = (
+  matrixId: number,
+  page = 0,
+  size = 10
+) =>
+  useQuery<PageResponse<ExamResponse>>({
+    queryKey: ['exams', 'matrix', matrixId, page, size],
+    queryFn: () => examService.getByMatrixIdPaged(matrixId, page, size),
+    enabled: !!matrixId, // chỉ gọi khi có matrixId hợp lệ
+    placeholderData: keepPreviousData,
   });
 
 // Lấy exam theo id

@@ -79,9 +79,10 @@ export const siteConfig = {
     ADMIN: [
       {
         name: 'Dashboard',
-        path: '/admin/dashboard',
+        path: '/admin',
         icon: 'lucide:layout-dashboard',
       },
+      { name: 'Khối lớp', path: '/admin/grade', icon: 'lucide:graduation-cap' },
       { name: 'Môn học', path: '/admin/subject', icon: 'lucide:book' },
       { name: 'Độ khó', path: '/admin/level', icon: 'lucide:activity' },
       {
@@ -89,14 +90,14 @@ export const siteConfig = {
         path: '/admin/question-type',
         icon: 'lucide:list',
       },
-      { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:grid' },
-      { name: 'Bài học', path: '/dashboard/lesson', icon: 'lucide:book-open' },
+      // { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:grid' },
+      // { name: 'Bài học', path: '/dashboard/lesson', icon: 'lucide:book-open' },
 
-      {
-        name: 'Nội dung',
-        path: '/dashboard/content',
-        icon: 'lucide:file-text',
-      },
+      // {
+      //   name: 'Nội dung',
+      //   path: '/dashboard/content',
+      //   icon: 'lucide:file-text',
+      // },
       { name: 'Cài đặt', path: '/settings', icon: 'lucide:settings' },
     ],
     TEACHER: [
@@ -105,15 +106,15 @@ export const siteConfig = {
         path: '/dashboard',
         icon: 'lucide:layout-dashboard',
       },
-      { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:grid' },
-      { name: 'Exam', path: '/dashboard/exam', icon: 'lucide:book-close' },
-      {
-        name: 'Nội dung',
-        path: '/dashboard/content',
-        icon: 'lucide:file-text',
-      },
+      // { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:grid' },
+      // { name: 'Bài thi', path: '/dashboard/exam', icon: 'lucide:book-close' },
+      // {
+      //   name: 'Nội dung',
+      //   path: '/dashboard/content',
+      //   icon: 'lucide:file-text',
+      // },
       { name: 'Bài học', path: '/dashboard/lesson', icon: 'lucide:book-open' },
-      { name: 'Cài đặt', path: '/settings', icon: 'lucide:settings' },
+      { name: 'Cài đặt', path: '/dashboard/settings', icon: 'lucide:settings' },
     ],
   },
 };

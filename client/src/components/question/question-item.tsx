@@ -1,5 +1,5 @@
 import React from 'react';
-import { Checkbox, Card, Chip, Tooltip, Button } from '@heroui/react';
+import { Checkbox, Card, Chip, Tooltip, Button, Spacer } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import { InlineMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
@@ -39,14 +39,14 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
   return (
     <Card className='p-4 shadow-sm flex justify-between items-start'>
       {/* Left side: checkbox + content */}
-      <div className='flex-1 flex gap-3'>
+      <div className='flex-1 flex gap-3 w-full'>
         <Checkbox
           className='mt-1'
           isSelected={isSelected}
           onValueChange={onSelect}
         />
 
-        <div className='flex-1'>
+        <div className='w-full flex-1 w-full'>
           {/* Header: số câu, level, type */}
           <div className='flex items-center gap-2 mb-2'>
             <span className='font-medium'>Câu {question.id}</span>
@@ -76,23 +76,24 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
           </p>
 
           {/* Options */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+          <div className='flex flex-row gap-2 w-full'>
             {question.options?.map((option: Partial<OptionPayload>, idx) => (
               <div
                 key={option.id ?? idx}
-                className='flex gap-2'
+                className={`flex gap-2 items-start ${
+                  option.isCorrect ? 'text-success-600 font-medium' : ''
+                }`}
               >
+                {/* Chữ A., B., C., ... */}
                 <span className='font-medium'>
                   {String.fromCharCode(65 + idx)}.
                 </span>
-                <span
-                  className={
-                    option.isCorrect
-                      ? 'text-success-600 font-medium'
-                      : undefined
-                  }
-                >
-                  {option.content}
+
+                {/* Nội dung option */}
+                <span className='flex-1'>
+                  {Array.isArray(option.content)
+                    ? renderBlocks(option.content)
+                    : (option.content ?? '')}
                 </span>
               </div>
             ))}
@@ -106,7 +107,7 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
           )}
         </div>
       </div>
-
+      <Spacer y={5} />
       {/* Right side: actions */}
       <div className='flex flex-row gap-2 w-1/6 items-end'>
         {onEdit && (

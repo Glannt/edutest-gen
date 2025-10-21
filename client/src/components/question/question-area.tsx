@@ -14,6 +14,8 @@ import {
   useState,
 } from 'react';
 import { Textarea } from '@heroui/input';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
 
 import FormulaEditor from '@/components/question/formula/formula-editor';
 import { ContentBlockPayload } from '@/types/question';
@@ -99,7 +101,38 @@ const TestArea = forwardRef<TestAreaRef, TestAreaProps>(
             Chèn công thức
           </Button>
         </div>
-
+        {/* ✅ Hiển thị preview text + công thức */}
+        <div className='mt-4 p-3 bg-gray-900 rounded-md min-h-10'>
+          {contentBlocks.length === 0 ? (
+            <span className='text-gray-500 italic'>
+              Xem trước nội dung tại đây...
+            </span>
+          ) : (
+            <div className='flex flex-wrap items-center gap-1 text-lg'>
+              {contentBlocks.map((block, idx) =>
+                block.type === 'formula' ? (
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: katex.renderToString(block.latex || '', {
+                        throwOnError: false,
+                        displayMode: false,
+                      }),
+                    }}
+                    key={idx}
+                    className='px-1'
+                  />
+                ) : (
+                  <span
+                    key={idx}
+                    className='whitespace-pre-wrap'
+                  >
+                    {block.value}
+                  </span>
+                )
+              )}
+            </div>
+          )}
+        </div>
         <Modal
           isOpen={isOpen}
           size='3xl'

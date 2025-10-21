@@ -8,6 +8,7 @@ import {
 } from '@heroui/drawer';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
+  addToast,
   Avatar,
   Badge,
   Button,
@@ -15,12 +16,14 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Tooltip,
 } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
 import { ThemeSwitch } from '@/components/theme-switch';
 import { useAuthStore } from '@/store/auth.store';
 import { siteConfig } from '@/config/site';
+import { useUserContext } from '@/components/settings/user/user-context';
 
 // Define navigation items
 // const navItems = [
@@ -44,6 +47,7 @@ import { siteConfig } from '@/config/site';
 // ];
 
 export default function SidebarLayout() {
+  const { logout } = useUserContext();
   const location = useLocation();
   const [isHover, setIsHover] = React.useState(false);
   const [isOpen, setIsOpen] = React.useState(true);
@@ -79,30 +83,59 @@ export default function SidebarLayout() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth-edutest-storage');
+    logout();
     window.location.href = '/';
   };
 
   return (
     <div className='min-h-screen'>
       {/* Toggle button for mobile */}
-      {/* {isMobile && (
-        <Button
-          isIconOnly
-          aria-label='Toggle Sidebar'
-          className='fixed top-4 left-4 z-50'
-          variant='light'
-          onPress={toggleSidebar}
-        >
-          <PlusIcon className='text-xl' />
-        </Button>
-      )} */}
       {!isOpen && (
+        // <aside
+        //   className='fixed top-0 left-0 h-full z-50 flex items-center'
+        //   onMouseEnter={toggleSidebar}
+        // >
+        //   <div className='h-full w-9 bg-content1 shadow-md rounded-r-sm border-r border-divider m-2 cursor-pointer hover:w-6 transition-all duration-200' />
+        // </aside>
         <aside
-          className='fixed top-0 left-0 h-full z-50 flex items-center'
+          className='fixed top-0 left-0 h-full z-50 flex flex-col items-center bg-content1 shadow-md rounded-r-sm border-r border-divider p-2'
           onMouseEnter={toggleSidebar}
         >
-          <div className='h-full w-9 bg-content1 shadow-md rounded-r-sm border-r border-divider m-2 cursor-pointer hover:w-6 transition-all duration-200' />
+          <div className='px-4 py-5 border-b border-divider'>
+            <Tooltip className='w-10 h-10 bg-primary/20 text-primary'>
+              <Icon
+                className='text-xl'
+                icon='lucide:bot'
+              />
+            </Tooltip>
+          </div>
+
+          {navItems.map((item: any) => (
+            <Tooltip
+              key={item.path}
+              content={item.name} // hiển thị tooltip tên khi sidebar mini
+              placement='right'
+            >
+              <NavLink
+                className={({ isActive }) =>
+                  `w-10 h-10 flex items-center justify-center my-1 rounded py-5.5 ${
+                    isActive
+                      ? 'bg-primary/20 text-primary'
+                      : 'text-foreground-500'
+                  } hover:bg-primary/10`
+                }
+                end={item.path === '/dashboard' || item.path === '/admin'}
+                to={item.path}
+              >
+                {item.icon && (
+                  <Icon
+                    className='text-xl'
+                    icon={item.icon} // Iconify string
+                  />
+                )}
+              </NavLink>
+            </Tooltip>
+          ))}
         </aside>
       )}
       {/* Sidebar using Drawer */}
@@ -127,10 +160,10 @@ export default function SidebarLayout() {
               <DrawerHeader className='flex items-center px-4 py-5 border-b border-divider'>
                 <div className='flex items-center gap-2'>
                   <div className='w-8 h-8 rounded-md bg-primary flex items-center justify-center'>
-                    {/* <Icon
+                    <Icon
                       className='text-white text-lg'
-                      icon='lucide:layout'
-                    /> */}
+                      icon='lucide:bot'
+                    />
                   </div>
                   <span className='font-semibold text-lg'>
                     Trợ lý tạo đề thi AI
@@ -149,7 +182,7 @@ export default function SidebarLayout() {
                             : 'text-foreground-600 hover:bg-content2'
                         }`
                       }
-                      end={item.path === '/dashboard'}
+                      end={item.path === '/dashboard' || item.path === '/admin'}
                       to={item.path}
                       onClick={isMobile ? onClose : undefined}
                     >
@@ -214,8 +247,13 @@ export function UserDropdown({ onLogout }: any) {
 
         if (user?.full_name) setFullName(user.full_name);
       }
-    } catch (err) {
-      console.error('Lỗi khi đọc thông tin người dùng:', err);
+    } catch {
+      // console.error('Lỗi khi đọc thông tin người dùng:', err);
+      addToast({
+        title: 'Lỗi khi đọc thông tin người dùng',
+        color: 'danger',
+        timeout: 2000,
+      });
     }
   }, []);
 

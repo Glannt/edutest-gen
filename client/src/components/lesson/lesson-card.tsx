@@ -14,7 +14,7 @@ export const LessonCard: React.FC<LessonCardProps> = ({ lesson, onSelect }) => {
     <Card
       // isPressable
       className='shadow-sm hover:shadow-md transition'
-      // onPress={() => onSelect?.(lesson.id)}
+      onPress={() => onSelect?.(lesson.id)}
     >
       <CardHeader className='flex gap-3 items-center'>
         <Icon

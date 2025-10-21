@@ -27,6 +27,24 @@ export const examService = {
     return res.data.data ?? res.data;
   },
 
+  /**
+   * Lấy danh sách exam theo Matrix ID (phân trang)
+   * @param matrixId ID của Matrix
+   * @param page Số trang (bắt đầu từ 0)
+   * @param size Kích thước trang
+   */
+  getByMatrixIdPaged: async (
+    matrixId: number,
+    page = 0,
+    size = 10
+  ): Promise<PageResponse<ExamResponse>> => {
+    const res = await http.get<ApiResponse<PageResponse<ExamResponse>>>(
+      `/exams/${matrixId}/exams?page=${page}&size=${size}`
+    );
+
+    return res.data.data ?? res.data;
+  },
+
   getById: async (id: number): Promise<ExamResponse> => {
     const res = await http.get<ApiResponse<ExamResponse>>(`/exams/${id}`);
 

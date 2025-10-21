@@ -5,6 +5,7 @@ import {
   Button,
   Tooltip,
   CircularProgress,
+  useDisclosure,
 } from '@heroui/react';
 
 import { GenericTable } from '@/components/table/generic-table';
@@ -14,7 +15,6 @@ import {
   subjectColumns,
 } from '@/utils/column';
 import { useTableData } from '@/hooks/useTableData';
-import { StatusOptions } from '@/interface/status-option.interface';
 import { TopContent } from '@/components/table/top-content';
 import SubjectModal from '@/components/subject/subject-modal';
 import { EditIcon, EyeFilledIcon, RecycleBinIcon } from '@/components/icons';
@@ -22,14 +22,20 @@ import {
   useCreateSubject,
   useDeleteSubject,
   useSubjects,
+  useUpdateSubject,
 } from '@/hooks/useSubjects';
 import { mapSubjectsPayloadList } from '@/mappers/subject.mapper';
+import { SubjectPayload } from '@/types/subject';
+import { EditSubjectModal } from '@/components/subject/edit-subject-modal';
+import { ViewSubjectModal } from '@/components/subject/view-subject-modal';
+import { DeleteSubjectModal } from '@/components/subject/delete-subject-modal';
 
 export default function SubjectTable() {
   // ---- React Query ----
   const { data: subjectsPayload = [], isLoading } = useSubjects();
   const createSubject = useCreateSubject();
   const deleteSubject = useDeleteSubject();
+  const updateSubject = useUpdateSubject();
 
   // ---- Map payload -> interface (memoized) ----
   const subjects: SubjectInterface[] = useMemo(
@@ -48,25 +54,20 @@ export default function SubjectTable() {
     column: 'name',
     direction: 'ascending',
   });
-  const [statusFilter, setStatusFilter] = useState<Selection>('all');
-  const statusOptions: StatusOptions[] = [];
   const [page, setPage] = useState(1);
   const hasSearchFilter = Boolean(filterValue);
 
   // --- Table data logic (gom vào hook) ---
-  const { headerColumns, filteredItems, sortedItems, pages } =
-    useTableData<SubjectInterface>({
-      data: subjects,
-      columns: subjectColumns,
-      visibleColumns,
-      filterValue,
-      hasSearchFilter,
-      statusFilter: statusFilter, // Subject không có status
-      statusOptions: statusOptions, // Subject không có status
-      rowsPerPage,
-      page,
-      sortDescriptor,
-    });
+  const { headerColumns, sortedItems } = useTableData<SubjectInterface>({
+    data: subjects,
+    columns: subjectColumns,
+    visibleColumns,
+    filterValue,
+    hasSearchFilter,
+    rowsPerPage,
+    page,
+    sortDescriptor,
+  });
 
   // renderCell
   const renderCell = React.useCallback(
@@ -89,7 +90,16 @@ export default function SubjectTable() {
                 content='Chi tiết'
                 delay={50}
               >
-                <Button size='sm'>
+                <Button
+                  size='sm'
+                  onPress={() => {
+                    const fullSubject =
+                      subjectsPayload.find((s) => s.id === subject.id) ?? null;
+
+                    setSelectedSubject(fullSubject);
+                    viewModal.onOpen();
+                  }}
+                >
                   <EyeFilledIcon
                     height={16}
                     width={16}
@@ -100,7 +110,16 @@ export default function SubjectTable() {
                 content='Chỉnh sửa'
                 delay={50}
               >
-                <Button size='sm'>
+                <Button
+                  size='sm'
+                  onPress={() => {
+                    const fullSubject =
+                      subjectsPayload.find((s) => s.id === subject.id) ?? null;
+
+                    setEditSubject(fullSubject);
+                    editModal.onOpen();
+                  }}
+                >
                   <EditIcon
                     height={16}
                     width={16}
@@ -114,19 +133,12 @@ export default function SubjectTable() {
                 <Button
                   isIconOnly
                   size='sm'
-                  onPress={async () => {
-                    const confirmed = window.confirm(
-                      `Bạn có chắc muốn xóa môn học "${subject.name}"?`
-                    );
+                  onPress={() => {
+                    const fullSubject =
+                      subjectsPayload.find((s) => s.id === subject.id) ?? null;
 
-                    if (!confirmed) return;
-
-                    try {
-                      await deleteSubject.mutateAsync(subject.id);
-                    } catch (error) {
-                      console.error('Lỗi khi xóa Subject:', error);
-                      alert('Xóa thất bại! Vui lòng thử lại.');
-                    }
+                    setSelectedSubject(fullSubject);
+                    deleteModal.onOpen();
                   }}
                 >
                   <RecycleBinIcon
@@ -140,7 +152,9 @@ export default function SubjectTable() {
 
         case 'created_at':
         case 'updated_at':
-          return new Date(cellValue as string).toLocaleDateString();
+          return new Date(
+            subject[columnKey as keyof SubjectInterface] as string
+          ).toLocaleDateString();
         default:
           return cellValue as string;
       }
@@ -149,7 +163,15 @@ export default function SubjectTable() {
   );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const viewModal = useDisclosure();
+  const editModal = useDisclosure();
+  const deleteModal = useDisclosure();
+
   const [newSubject, setNewSubject] = useState({ name: '', description: '' });
+  const [selectedSubject, setSelectedSubject] = useState<SubjectPayload | null>(
+    null
+  );
+  const [editSubject, setEditSubject] = useState<SubjectPayload | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setNewSubject((prev) => ({ ...prev, [field]: value }));
@@ -167,11 +189,38 @@ export default function SubjectTable() {
       console.error('Lỗi khi tạo Subject:', error);
     }
   };
+
+  const handleEditChange = (field: keyof SubjectPayload, value: string) => {
+    if (!editSubject) return;
+    setEditSubject({ ...editSubject, [field]: value });
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editSubject) return;
+    try {
+      await updateSubject.mutateAsync({
+        id: editSubject.id,
+        payload: editSubject,
+      });
+      editModal.onClose();
+    } catch (error) {
+      console.error('Cập nhật Subject thất bại:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedSubject) return;
+    try {
+      await deleteSubject.mutateAsync(selectedSubject.id);
+      deleteModal.onClose();
+    } catch (error) {
+      console.error('Xóa Subject thất bại:', error);
+    }
+  };
+
   const topContentProps = {
     columns: subjectColumns,
     filterValue,
-    statusFilter,
-    statusOptions,
     total: subjects.length,
     visibleColumns,
     onClear: () => {
@@ -187,7 +236,6 @@ export default function SubjectTable() {
       setFilterValue(v || '');
       setPage(1);
     },
-    onStatusChange: setStatusFilter,
   };
 
   // ---- Loading ----
@@ -219,12 +267,9 @@ export default function SubjectTable() {
         setRowsPerPage={setRowsPerPage}
         setSelectedKeys={setSelectedKeys}
         setSortDescriptor={setSortDescriptor}
-        setStatusFilter={setStatusFilter}
         setVisibleColumns={setVisibleColumns}
         sortDescriptor={sortDescriptor}
         sortedItems={sortedItems}
-        statusFilter={statusFilter}
-        statusOptions={statusOptions}
         topContent={
           <TopContent
             {...topContentProps}
@@ -250,6 +295,36 @@ export default function SubjectTable() {
         }
         visibleColumns={visibleColumns}
       />
+
+      {/* View Modal */}
+      {selectedSubject && (
+        <ViewSubjectModal
+          isOpen={viewModal.isOpen}
+          subject={selectedSubject}
+          onOpenChange={viewModal.onOpenChange}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editSubject && (
+        <EditSubjectModal
+          handleInputChange={handleEditChange}
+          handleSubmit={handleEditSubmit}
+          isOpen={editModal.isOpen}
+          subject={editSubject}
+          onOpenChange={editModal.onOpenChange}
+        />
+      )}
+
+      {/* Delete Modal */}
+      {selectedSubject && (
+        <DeleteSubjectModal
+          isOpen={deleteModal.isOpen}
+          subjectName={selectedSubject.name}
+          onDelete={handleDelete}
+          onOpenChange={deleteModal.onOpenChange}
+        />
+      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import type { QuestionPayload } from '@/types/question';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Form,
   Input,
@@ -8,7 +8,6 @@ import {
   SelectItem,
   Button,
   Spinner,
-  Checkbox,
   addToast,
 } from '@heroui/react';
 import { useParams } from 'react-router-dom';
@@ -25,6 +24,9 @@ import { useChapter } from '@/hooks/useChapter';
 import { RecheckModal } from '@/components/question/modal/recheck-modal';
 import { useCreateQuestion } from '@/hooks/useQuestion';
 import TestArea, { TestAreaRef } from '@/components/question/question-area';
+import OptionInput, {
+  OptionInputRef,
+} from '@/components/question/option-input';
 
 interface CreateQuestionProps {
   selectedGrade?: number | undefined;
@@ -53,52 +55,80 @@ export default function CreateQuestionForm({
     explanationJson: [{ type: 'text', value: '' }],
   });
 
-  //ref
-  const contentRef = React.useRef<TestAreaRef>(null);
-  const explanationRef = React.useRef<TestAreaRef>(null);
+  // ✅ refs
+  const contentRef = useRef<TestAreaRef>(null);
+  const explanationRef = useRef<TestAreaRef>(null);
+  const optionRefs = useRef<(OptionInputRef | null)[]>([]);
 
   const [options, setOptions] = useState<Partial<OptionPayload>[]>([
-    { content: '', isCorrect: false, orderIndex: 1 },
-    { content: '', isCorrect: false, orderIndex: 2 },
-    { content: '', isCorrect: false, orderIndex: 3 },
-    { content: '', isCorrect: false, orderIndex: 4 },
+    {
+      content: [{ type: 'text', value: '' }],
+      isCorrect: false,
+      orderIndex: 1,
+    },
   ]);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState<Partial<QuestionPayload> | null>(
     null
   );
   const [showConfirm, setShowConfirm] = useState(false);
+
   // --- API Hooks ---
   const { data: levels = [], isLoading: isLevelsLoading } = useLevels();
   const { data: questionTypes = [], isLoading: isQTypesLoading } =
     useQuestionTypes();
-
   const { data: subject, isLoading: isSubjectLoading } =
     useSubject(selectedSubject);
-
   const { data: grade, isLoading: isGradeLoading } = useGrade(selectedGrade);
   const { data: chapter, isLoading: isChapterLoading } =
     useChapter(selectedChapter);
 
   // --- Validate form ---
-  const validate = (data: Partial<QuestionPayload>) => {
+  const validate = (
+    data: Partial<QuestionPayload>,
+    latestOptions: Partial<OptionPayload>[]
+  ) => {
     const newErrors: Record<string, string> = {};
 
-    if (!data.contentJson || !data.contentJson[0]?.value?.trim()) {
+    // 🧩 Kiểm tra nội dung chính
+    if (
+      !data.contentJson ||
+      !Array.isArray(data.contentJson) ||
+      data.contentJson.every(
+        (b) =>
+          (b.type === 'text' && !b.value?.trim()) ||
+          (b.type === 'formula' && !b.latex?.trim())
+      )
+    ) {
       newErrors.contentJson = 'Nội dung câu hỏi là bắt buộc';
     }
+
     if (!data.lessonId) newErrors.lessonId = 'Bài học là bắt buộc';
     if (!data.levelId) newErrors.levelId = 'Mức độ là bắt buộc';
     if (!data.questionTypeId)
       newErrors.questionTypeId = 'Loại câu hỏi là bắt buộc';
 
-    // Validate options
-    const validOptions = options.filter((o) => o?.content?.trim() !== '');
+    // ✅ Validate các lựa chọn dựa trên dữ liệu latestOptions
+    const validOptions = (latestOptions ?? []).filter((o) => {
+      if (!Array.isArray(o?.content)) return false;
 
-    if (validOptions.length < 2) {
-      newErrors.options = 'Phải có ít nhất 2 lựa chọn hợp lệ';
+      // ít nhất 1 block hợp lệ
+      return o.content.some(
+        (b) =>
+          (b.type === 'text' && !!b.value?.trim()) ||
+          (b.type === 'formula' && !!b.latex?.trim())
+      );
+    });
+
+    console.log('✅ [validate] validOptions:', validOptions);
+
+    if (validOptions.length < 1) {
+      newErrors.options = 'Phải có ít nhất 1 lựa chọn hợp lệ';
     }
-    const hasCorrect = options.some((o) => o.isCorrect);
+
+    // 🧩 Kiểm tra đáp án đúng
+    const hasCorrect = (latestOptions ?? []).some((o) => o.isCorrect);
 
     if (!hasCorrect) {
       newErrors.correctAnswer = 'Phải chọn ít nhất 1 đáp án đúng';
@@ -108,42 +138,54 @@ export default function CreateQuestionForm({
   };
 
   // --- Submit form ---
-
   const handleConfirmSubmit = async () => {
-    const newErrors = validate(question);
+    console.log('%c[SUBMIT] 🔄 Starting validation...', 'color:#03a9f4');
 
+    // 1️⃣ Gọi processText() cho toàn bộ input
     contentRef.current?.processText();
     explanationRef.current?.processText();
+    optionRefs.current.forEach((ref) => ref?.processText());
+
+    // 2️⃣ Thu thập latest data từ ref
+    const latestOptions: Partial<OptionPayload>[] = options.map((opt, i) => {
+      const ref = optionRefs.current[i];
+      const latestContent = ref?.getContent?.() ?? opt.content ?? [];
+
+      return {
+        ...opt,
+        content: latestContent,
+        orderIndex: opt.orderIndex ?? i + 1,
+      };
+    });
+
+    console.log('🧩 [Latest Options]', latestOptions);
+
+    // 3️⃣ Validate
+    const newErrors = validate(question, latestOptions);
+
     if (Object.keys(newErrors).length > 0) {
+      console.warn('⚠️ Validation failed:', newErrors);
       setErrors(newErrors);
       setShowConfirm(false);
 
       return;
     }
 
+    // 4️⃣ Tạo payload hợp lệ
     const payload: Partial<QuestionPayload> = {
-      contentJson: question.contentJson!,
-      explanationJson: question.explanationJson ?? [],
-      lessonId: question.lessonId!,
-      levelId: question.levelId!,
-      questionTypeId: question.questionTypeId!,
-      options: options.map((opt) => ({
+      ...question,
+      options: latestOptions.map((opt) => ({
         ...opt,
         questionId: question.id,
       })),
     };
 
-    setSubmitted(payload);
-    console.log('📦 Submit Question Payload:', payload);
+    console.log('%c📦 Final Payload:', 'color:#4caf50', payload);
 
+    // 5️⃣ Gửi request
     try {
-      // 🧩 Gọi API tạo câu hỏi
       const res = await createQuestion(payload);
 
-      setSubmitted(res);
-      setShowConfirm(false);
-
-      // ✅ Thông báo thành công
       addToast({
         title: 'Thành công',
         description: 'Câu hỏi đã được tạo thành công!',
@@ -151,8 +193,6 @@ export default function CreateQuestionForm({
         timeout: 1500,
       });
     } catch (err: any) {
-      console.error('❌ Error creating question:', err);
-
       addToast({
         title: 'Lỗi',
         description: err?.message ?? 'Không thể tạo câu hỏi',
@@ -160,6 +200,7 @@ export default function CreateQuestionForm({
         timeout: 1500,
       });
     }
+
     setShowConfirm(false);
   };
 
@@ -170,8 +211,23 @@ export default function CreateQuestionForm({
     value: any
   ) => {
     setOptions((prev) =>
-      prev.map((opt, i) => (i === index ? { ...opt, [field]: value } : opt))
+      prev.map((opt, i) =>
+        i === index
+          ? { ...opt, [field]: value, orderIndex: opt.orderIndex ?? i + 1 }
+          : opt
+      )
     );
+  };
+
+  const addOption = () => {
+    setOptions((prev) => [
+      ...prev,
+      {
+        content: [{ type: 'text', value: '' }],
+        isCorrect: false,
+        orderIndex: prev.length + 1,
+      },
+    ]);
   };
 
   const toggleCorrect = (index: number) => {
@@ -183,7 +239,7 @@ export default function CreateQuestionForm({
     );
   };
 
-  // --- Loading state ---
+  // --- Loading ---
   if (isLevelsLoading || isQTypesLoading) {
     return (
       <div className='flex justify-center py-20'>
@@ -195,9 +251,8 @@ export default function CreateQuestionForm({
   // --- Main Form ---
   return (
     <div className='max-w-7xl mx-auto p-6 border rounded-medium shadow-2xl shadow-blue-300/40 bg-foreground-50'>
-      {' '}
       <Form
-        className='space-y-6 '
+        className='space-y-6'
         validationErrors={errors}
         onReset={() => {
           setQuestion({
@@ -205,7 +260,6 @@ export default function CreateQuestionForm({
           });
           setSubmitted(null);
         }}
-        // onSubmit={handleSubmit}
         onSubmit={(e) => {
           e.preventDefault();
           setShowConfirm(true);
@@ -277,28 +331,30 @@ export default function CreateQuestionForm({
 
           {/* 🟩 CỘT PHẢI */}
           <div className='flex flex-col gap-6'>
-            {/* Options */}
             <div>
-              <p className='font-light mb-2 text-sm'>Các lựa chọn (tối đa 4)</p>
+              <p className='font-semibold mb-2 text-md '>Các lựa chọn</p>
               {options.map((opt, index) => (
-                <div
+                <OptionInput
                   key={index}
-                  className='flex items-center gap-2 mb-2 border p-2 rounded-md'
-                >
-                  <Input
-                    className='flex-1'
-                    placeholder={`Lựa chọn ${index + 1}`}
-                    value={opt.content}
-                    onValueChange={(val) => updateOption(index, 'content', val)}
-                  />
-                  <Checkbox
-                    isSelected={opt.isCorrect}
-                    onValueChange={() => toggleCorrect(index)}
-                  >
-                    Đúng
-                  </Checkbox>
-                </div>
+                  ref={(el) => (optionRefs.current[index] = el)}
+                  defaultValue={opt.content}
+                  isCorrect={opt.isCorrect ?? false}
+                  label={`Lựa chọn ${index + 1}`}
+                  onChange={(newBlocks) =>
+                    updateOption(index, 'content', newBlocks)
+                  }
+                  onToggleCorrect={() => toggleCorrect(index)}
+                />
               ))}
+              <Button
+                className='mt-2 w-full'
+                size='sm'
+                type='button'
+                variant='shadow'
+                onClick={addOption}
+              >
+                Thêm lựa chọn
+              </Button>
               {errors.options && (
                 <p className='text-danger text-sm mt-1'>{errors.options}</p>
               )}
@@ -309,7 +365,7 @@ export default function CreateQuestionForm({
               )}
             </div>
 
-            {/* Các thông tin phụ */}
+            {/* Thông tin phụ */}
             {question.lessonId && (
               <Input
                 isReadOnly
@@ -342,7 +398,7 @@ export default function CreateQuestionForm({
           </div>
         </div>
 
-        {/* 🟨 Nút hành động - căn giữa */}
+        {/* 🟨 Nút hành động */}
         <div className='flex justify-center gap-4 pt-6 border-t mt-6 w-full'>
           <Button
             color='primary'
@@ -362,14 +418,7 @@ export default function CreateQuestionForm({
           </Button>
         </div>
       </Form>
-      {/* {submitted && (
-        <div className='mt-6 text-sm text-default-600'>
-          <h3 className='font-semibold'>Dữ liệu đã submit:</h3>
-          <pre className='bg-default-50 p-3 rounded-md mt-2'>
-            {JSON.stringify(submitted, null, 2)}
-          </pre>
-        </div>
-      )} */}
+
       <RecheckModal
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}

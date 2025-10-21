@@ -28,8 +28,10 @@ import { Logo } from '@/components/icons';
 import LoginModal from '@/components/login/login-modal.component';
 import { useAuthStore } from '@/store/auth.store';
 import RegisterModal from '@/components/login/register.modal.component';
+import { useUserContext } from '@/components/settings/user/user-context';
 
 export const Navbar = () => {
+  const { logout } = useUserContext();
   const navigate = useNavigate();
   const {
     isOpen: isOpenLogin,
@@ -68,7 +70,7 @@ export const Navbar = () => {
     />
   );
   const handleLogout = () => {
-    localStorage.removeItem('auth-edutest-storage');
+    logout();
     window.location.href = '/';
   };
 
@@ -92,6 +94,17 @@ export const Navbar = () => {
             <p className='font-bold text-inherit'>Trợ lý tạo đề thi</p>
           </Link>
         </NavbarBrand>
+      </NavbarContent>
+      <NavbarContent className='gap-3 max-w-fit'>
+        <NavbarItem>
+          <Link
+            className='hover:text-primary-600'
+            color='foreground'
+            href='/dashboard'
+          >
+            Bảng điều khiển
+          </Link>
+        </NavbarItem>
       </NavbarContent>
       <NavbarContent
         className='hidden sm:flex gap-4'

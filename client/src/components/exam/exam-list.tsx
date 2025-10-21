@@ -77,9 +77,18 @@ export const ExamList: React.FC = () => {
     try {
       await deleteExamMutation.mutateAsync(selectedExam.id);
       deleteModal.onClose();
+      addToast({
+        title: 'Xóa bài thi thành công',
+        color: 'success',
+        timeout: 2000,
+      });
       refetch();
-    } catch (error) {
-      console.error('Delete exam error:', error);
+    } catch {
+      addToast({
+        title: 'Xóa bài thi lỗi',
+        color: 'danger',
+        timeout: 2000,
+      });
     }
   };
 
@@ -172,7 +181,11 @@ export const ExamList: React.FC = () => {
         link.remove();
       });
     } catch (error) {
-      console.error('Export multiple exams error:', error);
+      addToast({
+        title: 'Export multiple exams error:' + error,
+        color: 'danger',
+        timeout: 2000,
+      });
     }
   };
 
@@ -199,7 +212,11 @@ export const ExamList: React.FC = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Export single exam error:', error);
+      addToast({
+        title: 'Export single exam error:' + error,
+        color: 'danger',
+        timeout: 2000,
+      });
     }
   };
 

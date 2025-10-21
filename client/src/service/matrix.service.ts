@@ -59,4 +59,22 @@ export const matrixService = {
   delete: async (id: number): Promise<void> => {
     await http.delete<ApiResponse<MatrixResponse>>(`/matrices/${id}`);
   },
+
+  /** ✅ Xuất 1 ma trận (Excel .xlsx) */
+  exportSingle: async (matrixId: number): Promise<Blob> => {
+    const res = await http.get(`/matrices/export/${matrixId}`, {
+      responseType: 'blob',
+    });
+
+    return res.data;
+  },
+
+  /** ✅ Xuất nhiều ma trận (ZIP) */
+  exportMultiple: async (matrixIds: number[]): Promise<Blob> => {
+    const res = await http.post(`/matrices/export/multiple`, matrixIds, {
+      responseType: 'blob',
+    });
+
+    return res.data;
+  },
 };

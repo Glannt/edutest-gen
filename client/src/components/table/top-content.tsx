@@ -18,11 +18,11 @@ interface Props {
   onSearchChange: (value?: string) => void;
   onClear: () => void;
   onRowsPerPageChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  onStatusChange: (keys: Selection) => void;
+  onStatusChange?: (keys: Selection) => void;
   onColumnsChange: (keys: any) => void;
-  statusFilter: Selection;
+  statusFilter?: Selection;
   visibleColumns: Selection;
-  statusOptions: StatusOptions[];
+  statusOptions?: StatusOptions[];
   columns: { name: string; uid: string }[];
   total: number;
   extraActions?: React.ReactNode;
@@ -55,39 +55,20 @@ export const TopContent: React.FC<Props> = ({
           onValueChange={onSearchChange}
         />
         <div className='flex gap-3'>
+          {statusOptions && statusOptions.length > 0 && onStatusChange && (
+            <DropDownStatusFilter
+              statusFilter={statusFilter}
+              statusOptions={statusOptions}
+              onStatusChange={onStatusChange}
+            />
+          )}
           <Dropdown>
             <DropdownTrigger className='hidden sm:flex'>
               <Button
                 endContent={<ChevronDownIcon className='text-small' />}
                 variant='flat'
               >
-                Status
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              disallowEmptySelection
-              closeOnSelect={false}
-              selectedKeys={statusFilter}
-              selectionMode='multiple'
-              onSelectionChange={onStatusChange}
-            >
-              {statusOptions.map((status) => (
-                <DropdownItem
-                  key={status.uid}
-                  className='capitalize'
-                >
-                  {status.name}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
-          <Dropdown>
-            <DropdownTrigger className='hidden sm:flex'>
-              <Button
-                endContent={<ChevronDownIcon className='text-small' />}
-                variant='flat'
-              >
-                Columns
+                Cột
               </Button>
             </DropdownTrigger>
             <DropdownMenu
@@ -121,9 +102,11 @@ export const TopContent: React.FC<Props> = ({
         </div>
       </div>
       <div className='flex justify-between items-center'>
-        <span className='text-default-400 text-small'>Total {total} items</span>
+        <span className='text-default-400 text-small'>
+          Tổng {total} kết quả
+        </span>
         <label className='flex items-center text-default-400 text-small'>
-          Rows per page:
+          Số hàng mỗi trang:
           <select
             className='bg-transparent outline-none text-default-400 text-small ml-1'
             onChange={onRowsPerPageChange}
@@ -135,5 +118,46 @@ export const TopContent: React.FC<Props> = ({
         </label>
       </div>
     </div>
+  );
+};
+
+interface DropDownStatusFilterProps {
+  onStatusChange: (keys: Selection) => void;
+  statusFilter?: Selection;
+  statusOptions: StatusOptions[];
+}
+
+const DropDownStatusFilter = ({
+  statusOptions,
+  statusFilter,
+  onStatusChange,
+}: DropDownStatusFilterProps) => {
+  return (
+    <Dropdown>
+      <DropdownTrigger className='hidden sm:flex'>
+        <Button
+          endContent={<ChevronDownIcon className='text-small' />}
+          variant='flat'
+        >
+          Trạng thái
+        </Button>
+      </DropdownTrigger>
+      <DropdownMenu
+        disallowEmptySelection
+        closeOnSelect={false}
+        selectedKeys={statusFilter}
+        selectionMode='multiple'
+        onSelectionChange={onStatusChange}
+      >
+        {statusOptions.map((status) => (
+          <DropdownItem
+            key={status.uid}
+            className='capitalize'
+          >
+            {status.name}
+          </DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
   );
 };

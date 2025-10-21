@@ -1,6 +1,7 @@
 // src/hooks/useRegister.ts
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { addToast } from '@heroui/react';
 
 import { useAuthStore } from '@/store/auth.store';
 import { authService, RegisterPayload } from '@/service/auth.service';
@@ -38,12 +39,12 @@ export const useRegister = () => {
       };
 
       // ✅ Lưu vào Zustand + LocalStorage
-      setAuth({ user, token: data.token ?? null });
+      setAuth({ user, token: data.token ?? '' });
 
       // ✅ Điều hướng theo role
       switch (data.role) {
         case 'ADMIN':
-          navigate('/admin/dashboard');
+          navigate('/admin');
           break;
         case 'TEACHER':
           navigate('/dashboard');
@@ -54,7 +55,12 @@ export const useRegister = () => {
     },
 
     onError: (error: any) => {
-      console.error('Register failed:', error);
+      // console.error('Register failed:', error);
+      addToast({
+        title: 'Đăng ký thất bại',
+        color: 'danger',
+        timeout: 2000,
+      });
     },
   });
 };

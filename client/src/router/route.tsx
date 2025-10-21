@@ -17,6 +17,10 @@ import { LessonComponent } from '@/components/lesson/lesson.component';
 import CreateQuestionPage from '@/pages/create-question';
 import ExamPage from '@/pages/exam';
 import FeaturePage from '@/pages/feature';
+import { MatrixExamList } from '@/components/matrix/exam-list';
+import MatrixLayout from '@/layouts/matrix-layout';
+import { UserSettingsPage } from '@/pages/setting';
+import GradePage from '@/pages/grade';
 
 export function AppRoutes() {
   return (
@@ -53,9 +57,23 @@ export function AppRoutes() {
           element={<DashboardPage />}
         />
         <Route
-          element={<MatrixPage />}
-          path='matrix'
+          element={<UserSettingsPage />}
+          path='settings'
         />
+        <Route
+          element={<MatrixLayout />}
+          path='matrix'
+        >
+          <Route
+            index
+            element={<MatrixPage />}
+          />
+          <Route
+            element={<MatrixExamList />}
+            path=':matrixId/exams'
+          />
+        </Route>
+
         <Route
           element={<ContentPage />}
           path='content'
@@ -99,6 +117,10 @@ export function AppRoutes() {
         <Route
           index
           element={<DashboardPage />}
+        />
+        <Route
+          element={<GradePage />}
+          path='grade'
         />
         <Route
           element={<SubjectPage />}

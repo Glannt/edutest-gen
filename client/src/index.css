@@ -1,0 +1,60 @@
+@import 'tailwindcss';
+@config "../tailwind.config.js";
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Educational app specific styles */
+.edu-heading {
+  @apply font-semibold tracking-tight;
+}
+
+.edu-heading-1 {
+  @apply text-3xl edu-heading;
+}
+
+.edu-heading-2 {
+  @apply text-2xl edu-heading;
+}
+
+.edu-heading-3 {
+  @apply text-xl edu-heading;
+}
+
+.edu-heading-4 {
+  @apply text-lg edu-heading;
+}
+
+/* Content styles */
+.edu-content {
+  @apply text-foreground-700 dark:text-foreground-400 leading-relaxed;
+}
+
+/* Link styles */
+.edu-link {
+  @apply text-primary-600 dark:text-primary-400 hover:underline font-medium;
+}
+
+/* Form label styles */
+.edu-label {
+  @apply text-sm font-medium text-foreground-700 dark:text-foreground-300 mb-1 block;
+}
+
+/* Transition utilities */
+.edu-transition {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Focus ring */
+.edu-focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-background;
+}

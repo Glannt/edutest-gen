@@ -13,6 +13,7 @@ import {
 import { BottomContent } from './bottom-content';
 
 import { useTableData } from '@/hooks/useTableData';
+import { StatusOptions } from '@/interface/status-option.interface';
 
 interface GenericTableProps<T> {
   data: T[];
@@ -21,8 +22,8 @@ interface GenericTableProps<T> {
   visibleColumns: Selection;
   filterValue: string;
   hasSearchFilter: boolean;
-  statusFilter: Selection;
-  statusOptions: { uid: string; name: string }[];
+  statusFilter?: Selection;
+  statusOptions?: StatusOptions[];
   rowsPerPage: number;
   page: number;
   sortDescriptor: SortDescriptor;
@@ -30,8 +31,8 @@ interface GenericTableProps<T> {
   selectedKeys: any;
   topContent?: React.ReactNode; // 👈 thêm vào
   bottomContent?: React.ReactNode; // 👈 thêm vào
-  setVisibleColumns: (val: any) => void;
-  setStatusFilter: React.Dispatch<React.SetStateAction<Selection>>;
+  setVisibleColumns?: (val: any) => void;
+  setStatusFilter?: React.Dispatch<React.SetStateAction<Selection>>;
   setFilterValue: (val: string) => void;
   setPage: (page: number) => void;
   setRowsPerPage: (rows: number) => void;
@@ -123,7 +124,6 @@ export function GenericTable<T extends { id: number }>({
         wrapper: 'max-h-[382px]',
       }}
       selectedKeys={selectedKeys}
-      selectionMode='multiple'
       sortDescriptor={sortDescriptor}
       topContent={topContent}
       topContentPlacement='outside'

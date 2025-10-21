@@ -7,13 +7,13 @@ export const INITIAL_VISIBLE_SUBJECT_COLUMNS = [
 ];
 
 export const subjectColumns: Column[] = [
-  { name: 'ID', uid: 'id', sortable: true },
-  { name: 'NAME', uid: 'name', sortable: true },
-  { name: 'DESCRIPTION', uid: 'description' },
-  { name: 'CREATED AT', uid: 'created_at', sortable: true },
-  { name: 'UPDATED AT', uid: 'updated_at', sortable: true },
+  { name: 'id', uid: 'id', sortable: true },
+  { name: 'Tên môn học', uid: 'name', sortable: true },
+  { name: 'Mô tả', uid: 'description' },
+  { name: 'Ngày tạo', uid: 'created_at', sortable: true },
+  { name: 'Ngày cập nhật', uid: 'updated_at', sortable: true },
   //   { name: 'LESSONS', uid: 'lessons' },
-  { name: 'ACTIONS', uid: 'actions' }, // thêm nếu bạn muốn có cột thao tác
+  { name: 'Thao tác', uid: 'actions' }, // thêm nếu bạn muốn có cột thao tác
 ];
 
 export const INITIAL_VISIBLE_LEVEL_COLUMNS = [
@@ -28,8 +28,8 @@ export const levelColumns: Column[] = [
   { uid: 'description', name: 'Mô tả' },
   { uid: 'points', name: 'Điểm', sortable: true },
   { uid: 'created_at', name: 'Ngày tạo', sortable: true },
-  { uid: 'updated_at', name: 'Cập nhật', sortable: true },
-  { uid: 'actions', name: 'Hành động' },
+  { uid: 'updated_at', name: 'Ngày cập nhật', sortable: true },
+  { uid: 'actions', name: 'Thao tác' },
 ];
 
 export const INITIAL_VISIBLE_QUESTIONTYPE_COLUMNS = [
@@ -38,10 +38,20 @@ export const INITIAL_VISIBLE_QUESTIONTYPE_COLUMNS = [
   'actions',
 ];
 
-export const questionTypeColumns = [
-  { key: 'name', label: 'Tên loại câu hỏi' },
-  { key: 'description', label: 'Mô tả' },
-  { key: 'created_at', label: 'Ngày tạo' },
-  { key: 'updated_at', label: 'Cập nhật' },
-  { key: 'actions', label: 'Thao tác' },
+export const questionTypeColumns: Column[] = [
+  { uid: 'name', name: 'Tên loại câu hỏi' },
+  { uid: 'description', name: 'Mô tả' },
+  { uid: 'created_at', name: 'Ngày tạo' },
+  { uid: 'updated_at', name: 'Cập nhật' },
+  { uid: 'actions', name: 'Thao tác' },
+];
+
+export const INITIAL_VISIBLE_GRADE_COLUMNS = ['name', 'actions'];
+
+export const gradeColumns: Column[] = [
+  { uid: 'name', name: 'Khối' },
+  // { uid: 'level', name: 'Cấp độ' },
+  { uid: 'created_at', name: 'Ngày tạo' },
+  { uid: 'updated_at', name: 'Cập nhật' },
+  { uid: 'actions', name: 'Thao tác' },
 ];

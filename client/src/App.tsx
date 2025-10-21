@@ -1,3 +1,4 @@
+import { UserProvider } from '@/components/settings/user/user-context';
 import { AppRoutes } from '@/router/route';
 
 function App() {
@@ -56,7 +57,11 @@ function App() {
   //     />
   //   </Routes>
   // );
-  return <AppRoutes />;
+  return (
+    <UserProvider>
+      <AppRoutes />
+    </UserProvider>
+  );
 }
 
 export default App;

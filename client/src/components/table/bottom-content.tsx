@@ -23,12 +23,16 @@ export const BottomContent: React.FC<Props> = ({
   totalItems,
 }) => {
   return (
-    <div className='py-2 px-2 flex justify-between items-center'>
-      <span className='w-[30%] text-small text-default-400'>
-        {selectedKeys === 'all'
-          ? 'All items selected'
-          : `${totalSelected} of ${totalItems} selected`}
-      </span>
+    <div className='w-full py-2 px-2 flex justify-center items-center gap-2'>
+      <Button
+        isDisabled={page === 1}
+        size='sm'
+        variant='flat'
+        onPress={onPreviousPage}
+      >
+        Trước
+      </Button>
+
       <Pagination
         isCompact
         showControls
@@ -38,24 +42,15 @@ export const BottomContent: React.FC<Props> = ({
         total={pages}
         onChange={onPageChange}
       />
-      <div className='hidden sm:flex w-[30%] justify-end gap-2'>
-        <Button
-          isDisabled={pages === 1}
-          size='sm'
-          variant='flat'
-          onPress={onPreviousPage}
-        >
-          Previous
-        </Button>
-        <Button
-          isDisabled={pages === 1}
-          size='sm'
-          variant='flat'
-          onPress={onNextPage}
-        >
-          Next
-        </Button>
-      </div>
+
+      <Button
+        isDisabled={page === pages}
+        size='sm'
+        variant='flat'
+        onPress={onNextPage}
+      >
+        Sau
+      </Button>
     </div>
   );
 };

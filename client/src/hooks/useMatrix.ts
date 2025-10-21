@@ -69,3 +69,14 @@ export const useDeleteMatrix = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['matrices'] }),
   });
 };
+
+export const useExportSingleMatrix = () =>
+  useMutation<Blob, Error, number>({
+    mutationFn: (matrixId: number) => matrixService.exportSingle(matrixId),
+  });
+
+export const useExportMultipleMatrix = () =>
+  useMutation<Blob, Error, number[]>({
+    mutationFn: (matrixIds: number[]) =>
+      matrixService.exportMultiple(matrixIds),
+  });

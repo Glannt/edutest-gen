@@ -8,8 +8,8 @@ export interface UseTableDataProps<T> {
   visibleColumns: Selection;
   filterValue: string;
   hasSearchFilter: boolean;
-  statusFilter: Selection;
-  statusOptions: StatusOptions[];
+  statusFilter?: Selection;
+  statusOptions?: StatusOptions[];
   rowsPerPage: number;
   page: number;
   sortDescriptor: SortDescriptor;
@@ -50,14 +50,15 @@ export function useTableData<T extends Record<string, any>>(
         )
       );
     }
-
-    if (
-      statusFilter !== 'all' &&
-      Array.from(statusFilter).length !== statusOptions.length
-    ) {
-      result = result.filter((item) =>
-        Array.from(statusFilter).includes(item.status)
-      );
+    if (statusFilter != undefined && statusOptions != undefined) {
+      if (
+        statusFilter !== 'all' &&
+        Array.from(statusFilter).length !== statusOptions.length
+      ) {
+        result = result.filter((item) =>
+          Array.from(statusFilter).includes(item.status)
+        );
+      }
     }
 
     return result;

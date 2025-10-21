@@ -5,6 +5,8 @@ import {
   Button,
   Tooltip,
   CircularProgress,
+  useDisclosure,
+  addToast,
 } from '@heroui/react';
 
 import { GenericTable } from '@/components/table/generic-table';
@@ -23,12 +25,17 @@ import {
   useDeleteQuestionType,
   useQuestionTypes,
 } from '@/store/useQuestionTypeStore';
+import { useUpdateQuestionType } from '@/hooks/useQuestionTypes';
+import { EditQuestionTypeModal } from '@/components/question-type/edit-questiontype-modal';
+import { ViewQuestionTypeModal } from '@/components/question-type/view-questiontype-modal';
+import { DeleteQuestionTypeModal } from '@/components/question-type/delete-questiontype-modal';
 
 export default function QuestionTypeTable() {
   // --- API Hooks ---
   const { data: questionTypesPayload = [], isLoading } = useQuestionTypes();
   const createQuestionType = useCreateQuestionType();
   const deleteQuestionType = useDeleteQuestionType();
+  const updateQuestionType = useUpdateQuestionType();
 
   // --- Mapping payload -> interface ---
   const questionTypes = useMemo(
@@ -95,7 +102,18 @@ export default function QuestionTypeTable() {
                 content='Chi tiết'
                 delay={50}
               >
-                <Button size='sm'>
+                <Button
+                  size='sm'
+                  onPress={() => {
+                    const fullItem =
+                      questionTypesPayload.find((q) => q.id === item.id) ??
+                      null;
+
+                    if (!fullItem) return;
+                    setSelectedQuestionType(fullItem);
+                    viewModal.onOpen();
+                  }}
+                >
                   <EyeFilledIcon
                     height={16}
                     width={16}
@@ -106,7 +124,18 @@ export default function QuestionTypeTable() {
                 content='Chỉnh sửa'
                 delay={50}
               >
-                <Button size='sm'>
+                <Button
+                  size='sm'
+                  onPress={() => {
+                    const fullItem =
+                      questionTypesPayload.find((q) => q.id === item.id) ??
+                      null;
+
+                    if (!fullItem) return;
+                    setEditQuestionType(fullItem);
+                    editModal.onOpen();
+                  }}
+                >
                   <EditIcon
                     height={16}
                     width={16}
@@ -119,18 +148,14 @@ export default function QuestionTypeTable() {
               >
                 <Button
                   size='sm'
-                  onPress={async () => {
-                    const confirmed = window.confirm(
-                      `Bạn có chắc muốn xóa "${item.name}"?`
-                    );
+                  onPress={() => {
+                    const fullItem =
+                      questionTypesPayload.find((q) => q.id === item.id) ??
+                      null;
 
-                    if (!confirmed) return;
-                    try {
-                      await deleteQuestionType.mutateAsync(item.id);
-                    } catch (err) {
-                      console.error('Lỗi khi xóa question type:', err);
-                      alert('Xóa thất bại! Vui lòng thử lại.');
-                    }
+                    if (!fullItem) return;
+                    setSelectedQuestionType(fullItem);
+                    deleteModal.onOpen();
                   }}
                 >
                   <RecycleBinIcon
@@ -160,6 +185,15 @@ export default function QuestionTypeTable() {
     description: '',
   });
 
+  const viewModal = useDisclosure();
+  const editModal = useDisclosure();
+  const deleteModal = useDisclosure();
+
+  const [selectedQuestionType, setSelectedQuestionType] =
+    useState<QuestionTypePayload | null>(null);
+  const [editQuestionType, setEditQuestionType] =
+    useState<QuestionTypePayload | null>(null);
+
   const handleInputChange = (field: string, value: string) => {
     setNewQuestionType((prev) => ({ ...prev, [field]: value }));
   };
@@ -172,8 +206,68 @@ export default function QuestionTypeTable() {
       });
       setIsModalOpen(false);
       setNewQuestionType({ name: '', description: '' });
-    } catch (error) {
-      console.error('Lỗi khi tạo question type:', error);
+      addToast({
+        title: 'Tạo loại câu hỏi thành công',
+        color: 'success',
+        timeout: 2000,
+      });
+    } catch {
+      addToast({
+        title: 'Lỗi khi tạo loại câu hỏi',
+        color: 'danger',
+        timeout: 2000,
+      });
+    }
+  };
+
+  const handleEditChange = (
+    field: keyof QuestionTypePayload,
+    value: string
+  ) => {
+    if (!editQuestionType) return;
+    setEditQuestionType({ ...editQuestionType, [field]: value });
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editQuestionType) return;
+    try {
+      await updateQuestionType.mutateAsync({
+        id: editQuestionType.id,
+        payload: editQuestionType,
+      });
+      editModal.onClose();
+      addToast({
+        title: 'Cập nhật loại câu hỏi thành công',
+        color: 'success',
+        timeout: 2000,
+      });
+      setEditQuestionType(null);
+    } catch {
+      addToast({
+        title: 'Lỗi khi cập nhật loại câu hỏi',
+        color: 'danger',
+        timeout: 2000,
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedQuestionType) return;
+    try {
+      await deleteQuestionType.mutateAsync(selectedQuestionType.id);
+      deleteModal.onClose();
+      addToast({
+        title: 'Xóa loại câu hỏi thành công',
+        color: 'danger',
+        timeout: 2000,
+      });
+      setSelectedQuestionType(null);
+    } catch {
+      addToast({
+        title: 'Lỗi khi xóa loại câu hỏi',
+        color: 'danger',
+        timeout: 2000,
+      });
     }
   };
 
@@ -212,51 +306,83 @@ export default function QuestionTypeTable() {
   }
 
   return (
-    <GenericTable<QuestionTypePayload>
-      columns={questionTypeColumns}
-      data={questionTypes}
-      filterValue={filterValue}
-      hasSearchFilter={hasSearchFilter}
-      headerColumns={headerColumns}
-      page={page}
-      renderCell={renderCell}
-      rowsPerPage={rowsPerPage}
-      selectedKeys={selectedKeys}
-      setFilterValue={setFilterValue}
-      setPage={setPage}
-      setRowsPerPage={setRowsPerPage}
-      setSelectedKeys={setSelectedKeys}
-      setSortDescriptor={setSortDescriptor}
-      setStatusFilter={setStatusFilter}
-      setVisibleColumns={setVisibleColumns}
-      sortDescriptor={sortDescriptor}
-      sortedItems={sortedItems}
-      statusFilter={statusFilter}
-      statusOptions={statusOptions}
-      topContent={
-        <TopContent
-          {...topContentProps}
-          extraActions={
-            <>
-              <Button
-                color='primary'
-                onPress={() => setIsModalOpen(true)}
-              >
-                Thêm mới
-              </Button>
-              <QuestionTypeModal
-                handleInputChange={handleInputChange}
-                handleModalClose={() => setIsModalOpen(false)}
-                handleSubmit={handleSubmit}
-                isOpen={isModalOpen}
-                newQuestionType={newQuestionType}
-                onOpenChange={setIsModalOpen}
-              />
-            </>
-          }
+    <>
+      <GenericTable<QuestionTypePayload>
+        columns={questionTypeColumns}
+        data={questionTypes}
+        filterValue={filterValue}
+        hasSearchFilter={hasSearchFilter}
+        headerColumns={headerColumns}
+        page={page}
+        renderCell={renderCell}
+        rowsPerPage={rowsPerPage}
+        selectedKeys={selectedKeys}
+        setFilterValue={setFilterValue}
+        setPage={setPage}
+        setRowsPerPage={setRowsPerPage}
+        setSelectedKeys={setSelectedKeys}
+        setSortDescriptor={setSortDescriptor}
+        setStatusFilter={setStatusFilter}
+        setVisibleColumns={setVisibleColumns}
+        sortDescriptor={sortDescriptor}
+        sortedItems={sortedItems}
+        statusFilter={statusFilter}
+        statusOptions={statusOptions}
+        topContent={
+          <TopContent
+            {...topContentProps}
+            extraActions={
+              <>
+                <Button
+                  color='primary'
+                  onPress={() => setIsModalOpen(true)}
+                >
+                  Thêm mới
+                </Button>
+                <QuestionTypeModal
+                  handleInputChange={handleInputChange}
+                  handleModalClose={() => setIsModalOpen(false)}
+                  handleSubmit={handleSubmit}
+                  isOpen={isModalOpen}
+                  newQuestionType={newQuestionType}
+                  onOpenChange={setIsModalOpen}
+                />
+              </>
+            }
+          />
+        }
+        visibleColumns={visibleColumns}
+      />
+
+      {/* View Modal */}
+      {selectedQuestionType && (
+        <ViewQuestionTypeModal
+          isOpen={viewModal.isOpen}
+          questionType={selectedQuestionType}
+          onOpenChange={viewModal.onOpenChange}
         />
-      }
-      visibleColumns={visibleColumns}
-    />
+      )}
+
+      {/* Edit Modal */}
+      {editQuestionType && (
+        <EditQuestionTypeModal
+          handleInputChange={handleEditChange}
+          handleSubmit={handleEditSubmit}
+          isOpen={editModal.isOpen}
+          questionType={editQuestionType}
+          onOpenChange={editModal.onOpenChange}
+        />
+      )}
+
+      {/* Delete Modal */}
+      {selectedQuestionType && (
+        <DeleteQuestionTypeModal
+          isOpen={deleteModal.isOpen}
+          questionTypeName={selectedQuestionType.name}
+          onDelete={handleDelete}
+          onOpenChange={deleteModal.onOpenChange}
+        />
+      )}
+    </>
   );
 }

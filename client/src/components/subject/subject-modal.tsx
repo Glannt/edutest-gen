@@ -29,7 +29,9 @@ export default function SubjectModal({
 }: SubjectModalProps) {
   return (
     <Modal
+      className='w-2xl h-fit'
       isOpen={isOpen}
+      size='xl'
       onClose={handleModalClose}
       onOpenChange={onOpenChange}
     >
@@ -37,22 +39,30 @@ export default function SubjectModal({
         {(onClose) => (
           <>
             <ModalHeader className='flex flex-col gap-1'>
-              Create New Subject
+              Tạo môn học mới
             </ModalHeader>
             <ModalBody>
               <div className='space-y-4'>
                 <Input
                   isRequired
-                  label='Name'
-                  placeholder='Enter subject name'
+                  className='mt-4 pt-2'
+                  classNames={{
+                    label: 'text-md mb-2',
+                    inputWrapper: 'mb-2',
+                  }}
+                  label='Tên môn học'
+                  placeholder='Nhập tên môn học'
                   value={newSubject.name}
                   onValueChange={(value) => handleInputChange('name', value)}
                 />
 
                 <Textarea
-                  label='Description'
+                  classNames={{
+                    label: 'text-md mb-2',
+                  }}
+                  label='Mô tả'
                   minRows={3}
-                  placeholder='Enter subject description'
+                  placeholder='Nhập mô tả môn học'
                   value={newSubject.description}
                   onValueChange={(value) =>
                     handleInputChange('description', value)
@@ -65,13 +75,13 @@ export default function SubjectModal({
                 variant='flat'
                 onPress={onClose}
               >
-                Cancel
+                Hủy
               </Button>
               <Button
                 color='primary'
                 onPress={handleSubmit}
               >
-                Create Subject
+                Tạo môn học
               </Button>
             </ModalFooter>
           </>

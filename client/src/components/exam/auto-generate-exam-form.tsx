@@ -102,9 +102,12 @@ export const AutoGenerateExamForm: React.FC = () => {
           shuffleOptions: true,
         });
       }
-    } catch (error) {
-      console.error(error);
-      alert('Có lỗi xảy ra khi tạo đề thi!');
+    } catch {
+      addToast({
+        title: 'Tạo đề thi lỗi',
+        color: 'danger',
+        timeout: 2000,
+      });
     }
   };
 
