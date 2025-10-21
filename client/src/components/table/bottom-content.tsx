@@ -7,9 +7,9 @@ interface Props {
   onPageChange: (page: number) => void;
   onNextPage: () => void;
   onPreviousPage: () => void;
-  selectedKeys: any;
-  totalSelected: number;
-  totalItems: number;
+  // selectedKeys: any;
+  // totalSelected: number;
+  // totalItems: number;
 }
 
 export const BottomContent: React.FC<Props> = ({
@@ -18,14 +18,11 @@ export const BottomContent: React.FC<Props> = ({
   onPageChange,
   onNextPage,
   onPreviousPage,
-  selectedKeys,
-  totalSelected,
-  totalItems,
 }) => {
   return (
     <div className='w-full py-2 px-2 flex justify-center items-center gap-2'>
       <Button
-        isDisabled={page === 1}
+        isDisabled={page === 0}
         size='sm'
         variant='flat'
         onPress={onPreviousPage}
@@ -44,7 +41,7 @@ export const BottomContent: React.FC<Props> = ({
       />
 
       <Button
-        isDisabled={page === pages}
+        isDisabled={page === pages - 1}
         size='sm'
         variant='flat'
         onPress={onNextPage}

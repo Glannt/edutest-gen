@@ -55,3 +55,20 @@ export const gradeColumns: Column[] = [
   { uid: 'updated_at', name: 'Cập nhật' },
   { uid: 'actions', name: 'Thao tác' },
 ];
+
+export const INITIAL_VISIBLE_USER_COLUMNS = [
+  'username',
+  'full_name',
+  'actions',
+];
+
+export const userColumns: Column[] = [
+  { uid: 'username', name: 'Tên đăng nhập' },
+  { uid: 'full_name', name: 'Họ và tên' },
+  { uid: 'email', name: 'email' },
+  { uid: 'isActive', name: 'Trạng thái hoạt động' },
+  // { uid: 'level', name: 'Cấp độ' },
+  { uid: 'created_at', name: 'Ngày tạo' },
+  { uid: 'updated_at', name: 'Cập nhật' },
+  { uid: 'actions', name: 'Thao tác' },
+];

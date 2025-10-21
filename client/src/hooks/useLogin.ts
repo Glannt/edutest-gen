@@ -60,6 +60,7 @@ export const useLogin = () => {
         full_name: data.full_name ?? data.username ?? '',
         username: data.username ?? '',
         email: data.email ?? '',
+        isActive: data.isActive ?? false,
         role: (data.role as 'ADMIN' | 'TEACHER') ?? 'TEACHER',
       };
 

@@ -23,34 +23,17 @@ import { QuestionTypePayload } from '@/types/question-type';
 import {
   useCreateQuestionType,
   useDeleteQuestionType,
-  useQuestionTypes,
 } from '@/store/useQuestionTypeStore';
-import { useUpdateQuestionType } from '@/hooks/useQuestionTypes';
+import {
+  usePagedQuestionTypes,
+  useUpdateQuestionType,
+} from '@/hooks/useQuestionTypes';
 import { EditQuestionTypeModal } from '@/components/question-type/edit-questiontype-modal';
 import { ViewQuestionTypeModal } from '@/components/question-type/view-questiontype-modal';
 import { DeleteQuestionTypeModal } from '@/components/question-type/delete-questiontype-modal';
+import { BottomContent } from '@/components/table/bottom-content';
 
 export default function QuestionTypeTable() {
-  // --- API Hooks ---
-  const { data: questionTypesPayload = [], isLoading } = useQuestionTypes();
-  const createQuestionType = useCreateQuestionType();
-  const deleteQuestionType = useDeleteQuestionType();
-  const updateQuestionType = useUpdateQuestionType();
-
-  // --- Mapping payload -> interface ---
-  const questionTypes = useMemo(
-    () =>
-      questionTypesPayload.map((qt) => ({
-        id: qt.id,
-        name: qt.name,
-        description: qt.description,
-        created_at: qt.created_at,
-        updated_at: qt.updated_at,
-        actions: '',
-      })),
-    [questionTypesPayload]
-  );
-
   // --- UI State ---
   const [filterValue, setFilterValue] = useState('');
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
@@ -63,9 +46,33 @@ export default function QuestionTypeTable() {
     direction: 'ascending',
   });
   const [statusFilter, setStatusFilter] = useState<Selection>('all');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const statusOptions: StatusOptions[] = [];
   const hasSearchFilter = Boolean(filterValue);
+  // --- API Hooks ---
+  const { data: questionTypesPayload, isLoading } = usePagedQuestionTypes({
+    page: page,
+    size: rowsPerPage,
+    sortBy: 'name',
+    direction: 'asc',
+  });
+  const createQuestionType = useCreateQuestionType();
+  const deleteQuestionType = useDeleteQuestionType();
+  const updateQuestionType = useUpdateQuestionType();
+
+  // --- Mapping payload -> interface ---
+  const questionTypes = useMemo(
+    () =>
+      (questionTypesPayload?.content ?? []).map((qt: QuestionTypePayload) => ({
+        id: qt.id,
+        name: qt.name,
+        description: qt.description,
+        created_at: qt.created_at,
+        updated_at: qt.updated_at,
+        actions: '',
+      })),
+    [questionTypesPayload]
+  );
 
   // --- Table Logic ---
   const { headerColumns, sortedItems } = useTableData<QuestionTypePayload>({
@@ -106,8 +113,9 @@ export default function QuestionTypeTable() {
                   size='sm'
                   onPress={() => {
                     const fullItem =
-                      questionTypesPayload.find((q) => q.id === item.id) ??
-                      null;
+                      questionTypesPayload?.content?.find(
+                        (q) => q.id === item.id
+                      ) ?? null;
 
                     if (!fullItem) return;
                     setSelectedQuestionType(fullItem);
@@ -128,8 +136,9 @@ export default function QuestionTypeTable() {
                   size='sm'
                   onPress={() => {
                     const fullItem =
-                      questionTypesPayload.find((q) => q.id === item.id) ??
-                      null;
+                      questionTypesPayload?.content?.find(
+                        (q) => q.id === item.id
+                      ) ?? null;
 
                     if (!fullItem) return;
                     setEditQuestionType(fullItem);
@@ -150,8 +159,9 @@ export default function QuestionTypeTable() {
                   size='sm'
                   onPress={() => {
                     const fullItem =
-                      questionTypesPayload.find((q) => q.id === item.id) ??
-                      null;
+                      questionTypesPayload?.content?.find(
+                        (q) => q.id === item.id
+                      ) ?? null;
 
                     if (!fullItem) return;
                     setSelectedQuestionType(fullItem);
@@ -294,6 +304,25 @@ export default function QuestionTypeTable() {
     onStatusChange: setStatusFilter,
   };
 
+  const bottomContent = (
+    <BottomContent
+      page={page}
+      pages={questionTypesPayload?.totalPages ?? 1}
+      //   selectedKeys={selectedKeys}
+      //   totalItems={usersPayload?.totalElements ?? 0}
+      //   totalSelected={
+      //     selectedKeys === 'all'
+      //       ? (usersPayload?.totalElements ?? 0)
+      //       : selectedKeys.size
+      //   }
+      onNextPage={() =>
+        page < (questionTypesPayload?.totalPages ?? 1) && setPage(page + 1)
+      }
+      onPageChange={setPage}
+      onPreviousPage={() => page > 1 && setPage(page - 1)}
+    />
+  );
+
   if (isLoading) {
     return (
       <div className='flex items-center justify-center h-screen'>
@@ -308,6 +337,7 @@ export default function QuestionTypeTable() {
   return (
     <>
       <GenericTable<QuestionTypePayload>
+        bottomContent={bottomContent}
         columns={questionTypeColumns}
         data={questionTypes}
         filterValue={filterValue}

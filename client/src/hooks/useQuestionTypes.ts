@@ -1,7 +1,28 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query';
 
 import { questionTypeService } from '@/service/question-type.service';
 import { QuestionTypePayload } from '@/types/question-type';
+import { PageResponse } from '@/types/page.response';
+
+/**
+ * Hook: Lấy danh sách người dùng (phân trang + sort)
+ */
+export const usePagedQuestionTypes = (params?: {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  direction?: 'asc' | 'desc';
+}) =>
+  useQuery<PageResponse<QuestionTypePayload>>({
+    queryKey: ['question-types', params],
+    queryFn: () => questionTypeService.getPaged(params),
+    placeholderData: keepPreviousData,
+  });
 
 /**
  * Lấy danh sách tất cả QuestionType

@@ -1,7 +1,28 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query';
 
 import { gradeService } from '@/service/grade.service';
 import { GradePayload } from '@/types/grade';
+import { PageResponse } from '@/types/page.response';
+
+/**
+ * Hook: Lấy danh sách người dùng (phân trang + sort)
+ */
+export const usePagedGrades = (params?: {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  direction?: 'asc' | 'desc';
+}) =>
+  useQuery<PageResponse<GradePayload>>({
+    queryKey: ['grades', params],
+    queryFn: () => gradeService.getPaged(params),
+    placeholderData: keepPreviousData,
+  });
 
 /**
  * Lấy danh sách tất cả Grade

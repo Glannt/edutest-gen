@@ -21,6 +21,7 @@ import { MatrixExamList } from '@/components/matrix/exam-list';
 import MatrixLayout from '@/layouts/matrix-layout';
 import { UserSettingsPage } from '@/pages/setting';
 import GradePage from '@/pages/grade';
+import UserPage from '@/pages/user';
 
 export function AppRoutes() {
   return (
@@ -119,6 +120,10 @@ export function AppRoutes() {
           element={<DashboardPage />}
         />
         <Route
+          element={<UserPage />}
+          path='user'
+        />
+        <Route
           element={<GradePage />}
           path='grade'
         />
@@ -133,6 +138,10 @@ export function AppRoutes() {
         <Route
           element={<QuestionType />}
           path='question-type'
+        />
+        <Route
+          element={<UserSettingsPage />}
+          path='settings'
         />
       </Route>
     </Routes>

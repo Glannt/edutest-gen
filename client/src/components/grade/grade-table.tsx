@@ -15,27 +15,19 @@ import { gradeColumns, INITIAL_VISIBLE_GRADE_COLUMNS } from '@/utils/column';
 import { useTableData } from '@/hooks/useTableData';
 import { GradePayload } from '@/types/grade';
 import {
-  useGrades,
   useCreateGrade,
   useUpdateGrade,
   useDeleteGrade,
+  usePagedGrades,
 } from '@/hooks/useGrades';
 import { EyeFilledIcon, EditIcon, RecycleBinIcon } from '@/components/icons';
 import { CreateGradeModal } from '@/components/grade/create-grade-modal';
 import { ViewGradeModal } from '@/components/grade/view-grade-modal';
 import { EditGradeModal } from '@/components/grade/edit-grade-modal';
 import { DeleteGradeModal } from '@/components/grade/delete-grade-modal';
+import { BottomContent } from '@/components/table/bottom-content';
 
 export default function GradeTable() {
-  // --- API Hooks ---
-  const { data: gradesPayload = [], isLoading } = useGrades();
-  const createGrade = useCreateGrade();
-  const updateGrade = useUpdateGrade();
-  const deleteGrade = useDeleteGrade();
-
-  // --- Map payload -> interface ---
-  const grades: GradePayload[] = useMemo(() => gradesPayload, [gradesPayload]);
-
   // --- UI States ---
   const [filterValue, setFilterValue] = useState('');
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
@@ -47,8 +39,32 @@ export default function GradeTable() {
     column: 'name',
     direction: 'ascending',
   });
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const hasSearchFilter = Boolean(filterValue);
+  // --- API Hooks ---
+  const { data: gradesPayload, isLoading } = usePagedGrades({
+    page: page,
+    size: rowsPerPage,
+    sortBy: 'name',
+    direction: 'asc',
+  });
+  const createGrade = useCreateGrade();
+  const updateGrade = useUpdateGrade();
+  const deleteGrade = useDeleteGrade();
+
+  // --- Map payload -> interface ---
+  const grades: GradePayload[] = useMemo(
+    () =>
+      (gradesPayload?.content || []).map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        level: g.level,
+        created_by: g.created_by,
+        created_at: g.created_at,
+        updated_at: g.updated_at,
+      })),
+    [gradesPayload]
+  );
 
   // --- Table Data ---
   const { headerColumns, sortedItems } = useTableData<GradePayload>({
@@ -255,6 +271,25 @@ export default function GradeTable() {
     },
   };
 
+  const bottomContent = (
+    <BottomContent
+      page={page}
+      pages={gradesPayload?.totalPages ?? 1}
+      //   selectedKeys={selectedKeys}
+      //   totalItems={usersPayload?.totalElements ?? 0}
+      //   totalSelected={
+      //     selectedKeys === 'all'
+      //       ? (usersPayload?.totalElements ?? 0)
+      //       : selectedKeys.size
+      //   }
+      onNextPage={() =>
+        page < (gradesPayload?.totalPages ?? 1) && setPage(page + 1)
+      }
+      onPageChange={setPage}
+      onPreviousPage={() => page > 1 && setPage(page - 1)}
+    />
+  );
+
   if (isLoading) {
     return (
       <div className='flex items-center justify-center h-screen'>
@@ -266,6 +301,7 @@ export default function GradeTable() {
   return (
     <>
       <GenericTable<GradePayload>
+        bottomContent={bottomContent}
         columns={gradeColumns}
         data={grades}
         filterValue={filterValue}

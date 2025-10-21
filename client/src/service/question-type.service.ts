@@ -1,5 +1,6 @@
 import http from '@/libs/http';
 import { ApiResponse } from '@/types/api.response';
+import { PageResponse } from '@/types/page.response';
 import { QuestionTypePayload } from '@/types/question-type';
 
 export const questionTypeService = {
@@ -8,6 +9,29 @@ export const questionTypeService = {
       await http.get<ApiResponse<QuestionTypePayload[]>>('/question-types');
 
     return res.data.data;
+  },
+
+  async getPaged(params?: {
+    page?: number;
+    size?: number;
+    sortBy?: string;
+    direction?: 'asc' | 'desc';
+  }): Promise<PageResponse<QuestionTypePayload>> {
+    const {
+      page = 0,
+      size = 10,
+      sortBy = 'id',
+      direction = 'asc',
+    } = params || {};
+
+    const res = await http.get<ApiResponse<PageResponse<QuestionTypePayload>>>(
+      '/question-types/paged',
+      {
+        params: { page, size, sortBy, direction },
+      }
+    );
+
+    return res.data.data ?? res.data;
   },
 
   getById: async (id: number): Promise<QuestionTypePayload> => {

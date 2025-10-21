@@ -10,8 +10,6 @@ import {
   Selection,
 } from '@heroui/react';
 
-import { BottomContent } from './bottom-content';
-
 import { useTableData } from '@/hooks/useTableData';
 import { StatusOptions } from '@/interface/status-option.interface';
 
@@ -53,17 +51,18 @@ export function GenericTable<T extends { id: number }>({
   page,
   sortDescriptor,
   selectedKeys,
-  setVisibleColumns,
-  setStatusFilter,
-  setFilterValue,
-  setPage,
-  setRowsPerPage,
+  // setVisibleColumns,
+  // setStatusFilter,
+  // setFilterValue,
+  // setPage,
+  // setRowsPerPage,
   setSelectedKeys,
   setSortDescriptor,
   topContent,
   renderCell,
+  bottomContent,
 }: GenericTableProps<T>) {
-  const { headerColumns, sortedItems, pages, filteredItems } = useTableData({
+  const { headerColumns, sortedItems } = useTableData({
     data,
     columns,
     visibleColumns,
@@ -101,18 +100,18 @@ export function GenericTable<T extends { id: number }>({
   //   />
   // );
 
-  const bottomContent = (
-    <BottomContent
-      page={page}
-      pages={pages}
-      selectedKeys={selectedKeys}
-      totalItems={filteredItems.length}
-      totalSelected={selectedKeys.size}
-      onNextPage={() => page < pages && setPage(page + 1)}
-      onPageChange={setPage}
-      onPreviousPage={() => page > 1 && setPage(page - 1)}
-    />
-  );
+  // const bottomContent = (
+  //   <BottomContent
+  //     page={page}
+  //     pages={pages}
+  //     selectedKeys={selectedKeys}
+  //     totalItems={filteredItems.length}
+  //     totalSelected={selectedKeys.size}
+  //     onNextPage={() => page < pages && setPage(page + 1)}
+  //     onPageChange={setPage}
+  //     onPreviousPage={() => page > 1 && setPage(page - 1)}
+  //   />
+  // );
 
   return (
     <Table

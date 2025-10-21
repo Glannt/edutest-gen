@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import 'katex/dist/katex.min.css';
 import {
   Table,
   TableHeader,
@@ -10,10 +11,12 @@ import {
   Spinner,
 } from '@heroui/react';
 import { Icon } from '@iconify/react';
+import { InlineMath } from 'react-katex';
 
 import { ExamQuestionRequest } from '@/types/exam';
 import { useMatrix } from '@/hooks/useMatrix';
 import { useQuestionsByMatrix } from '@/hooks/useQuestion';
+import { ContentBlockPayload } from '@/types/question';
 
 interface QuestionSelectorProps {
   matrixId: number;
@@ -41,12 +44,25 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
   const filteredQuestions = useMemo(() => {
     if (!searchQuery.trim()) return questions;
 
-    return questions.filter(
-      (q) =>
-        q.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        q.level?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        q.questionType?.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return questions.filter((q) => {
+      // Gộp toàn bộ text và latex trong contentJson thành chuỗi tìm kiếm
+      const contentText =
+        q.contentJson
+          ?.map((block) => block.value || block.latex || '')
+          .join(' ')
+          .toLowerCase() ?? '';
+
+      const levelName = q.level?.name?.toLowerCase() ?? '';
+      const typeName = q.questionType?.name?.toLowerCase() ?? '';
+
+      const query = searchQuery.toLowerCase();
+
+      return (
+        contentText.includes(query) ||
+        levelName.includes(query) ||
+        typeName.includes(query)
+      );
+    });
   }, [questions, searchQuery]);
 
   // Xử lý chọn/bỏ chọn nhiều dòng
@@ -77,6 +93,19 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
       </div>
     );
   }
+
+  const renderBlocks = (blocks: ContentBlockPayload[]): React.ReactNode[] => {
+    return blocks.map((block, idx) => {
+      if (block.type === 'text' && block.value) {
+        return <span key={idx}>{block.value} </span>;
+      }
+      if (block.type === 'formula' && block.latex) {
+        return <InlineMath key={idx}>{block.latex}</InlineMath>;
+      }
+
+      return null;
+    });
+  };
 
   return (
     <div className='space-y-4'>
@@ -114,7 +143,9 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
           <TableBody items={filteredQuestions}>
             {(question) => (
               <TableRow key={question.id}>
-                <TableCell>{question.content}</TableCell>
+                <TableCell>
+                  {renderBlocks(question.contentJson || [])}
+                </TableCell>
                 <TableCell>
                   <div
                     className={`px-2 py-1 rounded text-center text-xs ${

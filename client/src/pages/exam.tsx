@@ -2,8 +2,8 @@ import { Card, CardBody, Tab, Tabs } from '@heroui/react';
 import { useState } from 'react';
 
 import { AutoGenerateExamForm } from '@/components/exam/auto-generate-exam-form';
-import { CreateExamForm } from '@/components/exam/create-exam-form';
 import { ExamList } from '@/components/exam/exam-list';
+import CreateExamPage from '@/components/test/create-exam.page';
 
 export default function ExamPage() {
   const [selectedTab, setSelectedTab] = useState<string>('create');
@@ -15,6 +15,7 @@ export default function ExamPage() {
     <>
       <div className='container mx-auto p-3'>
         <h1 className='text-2xl font-bold mb-6'>Quản lý đề thi</h1>
+
         <Tabs
           aria-label='Exam Management Options'
           className='mb-6'
@@ -27,7 +28,8 @@ export default function ExamPage() {
           >
             <Card>
               <CardBody>
-                <CreateExamForm />
+                {/* <CreateExamForm /> */}
+                <CreateExamPage />
               </CardBody>
             </Card>
           </Tab>

@@ -64,31 +64,20 @@ export function useTableData<T extends Record<string, any>>(
     return result;
   }, [data, filterValue, statusFilter, statusOptions, hasSearchFilter]);
 
-  // Pagination
-  const pages = Math.ceil(filteredItems.length / rowsPerPage) || 1;
-
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-
-    return filteredItems.slice(start, start + rowsPerPage);
-  }, [page, filteredItems, rowsPerPage]);
-
   // Sorting
   const sortedItems = React.useMemo(() => {
-    return [...items].sort((a, b) => {
+    return [...filteredItems].sort((a, b) => {
       const first = a[sortDescriptor.column];
       const second = b[sortDescriptor.column];
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === 'descending' ? -cmp : cmp;
     });
-  }, [items, sortDescriptor]);
+  }, [filteredItems, sortDescriptor]);
 
   return {
     headerColumns,
-    filteredItems,
     sortedItems,
-    pages,
   };
 }
 

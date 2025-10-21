@@ -1,4 +1,3 @@
-'use client';
 import React, { useMemo, useState } from 'react';
 import {
   SortDescriptor,
@@ -11,73 +10,75 @@ import {
 } from '@heroui/react';
 
 import { GenericTable } from '@/components/table/generic-table';
-import { LevelInterface } from '@/interface/level.interface';
-import { INITIAL_VISIBLE_LEVEL_COLUMNS, levelColumns } from '@/utils/column';
+import { INITIAL_VISIBLE_USER_COLUMNS, userColumns } from '@/utils/column';
 import { useTableData } from '@/hooks/useTableData';
 import { StatusOptions } from '@/interface/status-option.interface';
 import { TopContent } from '@/components/table/top-content';
-import LevelModal from '@/components/level/level-modal';
 import { EditIcon, EyeFilledIcon, RecycleBinIcon } from '@/components/icons';
+import { UserPayload } from '@/types/user';
+import { UserInterface } from '@/interface/user.interface';
+import { ViewUserModal } from '@/components/user/view-user-modal';
+import { EditUserModal } from '@/components/user/edit-user-modal';
+import { DeleteUserModal } from '@/components/user/delete-user-modal';
 import {
-  useCreateLevel,
-  useDeleteLevel,
-  usePagedLevels,
-  useUpdateLevel,
-} from '@/hooks/useLevels';
-import { LevelPayload } from '@/types/level';
-import { ViewLevelModal } from '@/components/level/view-level-modal';
-import { EditLevelModal } from '@/components/level/edit-level-modal';
-import { DeleteLevelModal } from '@/components/level/delete-level-modal';
+  useCreateUser,
+  useDeleteUser,
+  usePagedUsers,
+  useUpdateUser,
+} from '@/hooks/useUser';
+import UserModal from '@/components/user/user-modal';
 import { BottomContent } from '@/components/table/bottom-content';
 
-export default function LevelTable() {
+export default function UserTable() {
   // ---- UI states ----
   const [filterValue, setFilterValue] = useState('');
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
-    new Set(INITIAL_VISIBLE_LEVEL_COLUMNS)
+    new Set(INITIAL_VISIBLE_USER_COLUMNS)
   );
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: 'points',
+    column: 'username',
     direction: 'ascending',
   });
   const [statusFilter, setStatusFilter] = useState<Selection>('all');
-  const statusOptions: StatusOptions[] = [];
   const [page, setPage] = useState(0);
   const hasSearchFilter = Boolean(filterValue);
 
-  const { data: levelsPayload, isLoading } = usePagedLevels({
+  const statusOptions: StatusOptions[] = [
+    { name: 'Hoạt động', uid: 'active' },
+    { name: 'Ngừng hoạt động', uid: 'inactive' },
+  ];
+
+  const { data: usersPayload, isLoading } = usePagedUsers({
     page: page,
     size: rowsPerPage,
-    sortBy: 'name',
+    sortBy: 'username',
     direction: 'asc',
   });
-  const createLevel = useCreateLevel();
-  const deleteLevel = useDeleteLevel();
-  const updateLevel = useUpdateLevel();
+  const createUser = useCreateUser();
+  const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
 
   // ---- Map payload -> interface ----
-  const levels: LevelInterface[] = useMemo(
+  const users: UserInterface[] = useMemo(
     () =>
-      (levelsPayload?.content ?? []).map((lvl: LevelPayload) => ({
-        id: lvl.id,
-        name: lvl.name,
-        description: lvl.description,
-        points: lvl.points,
-        created_at: lvl.created_at,
-        updated_at: lvl.updated_at,
-        actions: '', // placeholder cho GenericTable
+      (usersPayload?.content || []).map((u: UserPayload) => ({
+        id: u.id,
+        username: u.username,
+        fullName: u.full_name,
+        email: u.email,
+        role: u.role,
+        isActive: u.isActive,
+        actions: '',
       })),
-    [levelsPayload]
+    [usersPayload]
   );
 
-  // const [levels, setLevels] = useState<LevelInterface[]>(initialLevels);
-
   // ---- Table Data ----
-  const { headerColumns, sortedItems } = useTableData<LevelInterface>({
-    data: levels,
-    columns: levelColumns,
+  const { headerColumns, sortedItems } = useTableData<UserInterface>({
+    data: users,
+    columns: userColumns,
     visibleColumns,
     filterValue,
     hasSearchFilter,
@@ -90,37 +91,43 @@ export default function LevelTable() {
 
   // ---- Render Cell ----
   const renderCell = React.useCallback(
-    (level: LevelInterface, columnKey: React.Key) => {
-      const cellValue = level[columnKey as keyof LevelInterface];
+    (user: UserInterface, columnKey: React.Key) => {
+      const cellValue = user[columnKey as keyof UserInterface];
 
       switch (columnKey) {
-        case 'name':
-          return <span className='font-medium'>{level.name}</span>;
-        case 'description':
+        case 'username':
+          return <span className='font-medium'>{user.username}</span>;
+        case 'fullName':
+          return <span>{user.fullName}</span>;
+        case 'email':
+          return <span className='text-default-500'>{user.email}</span>;
+        case 'role':
+          return <span>{user.role}</span>;
+        case 'isActive':
           return (
-            <div className='max-w-xs truncate text-default-500'>
-              {level.description}
-            </div>
+            <span
+              className={`font-semibold ${
+                user.isActive == true ? 'text-success' : 'text-danger'
+              }`}
+            >
+              {user.isActive == true ? 'Hoạt động' : 'Ngừng hoạt động'}
+            </span>
           );
-        case 'points':
-          return <span>{level.points.toLocaleString()}</span>;
         case 'actions':
           return (
             <div className='space-x-2'>
-              <Tooltip
-                content='Chi tiết'
-                delay={50}
-              >
+              <Tooltip content='Chi tiết'>
                 <Button
                   size='sm'
                   onPress={() => {
-                    const fullLevel =
-                      levelsPayload?.content?.find((l) => l.id === level.id) ??
-                      null;
-
-                    if (!fullLevel) return;
-
-                    setSelectedLevel(fullLevel);
+                    setSelectedUser({
+                      id: user.id,
+                      username: user.username,
+                      full_name: user.fullName, // ✅ chuyển đổi đúng tên field backend
+                      email: user.email,
+                      isActive: user.isActive,
+                      role: user.role,
+                    });
                     viewModal.onOpen();
                   }}
                 >
@@ -130,19 +137,18 @@ export default function LevelTable() {
                   />
                 </Button>
               </Tooltip>
-              <Tooltip
-                content='Chỉnh sửa'
-                delay={50}
-              >
+              <Tooltip content='Chỉnh sửa'>
                 <Button
                   size='sm'
                   onPress={() => {
-                    const fullLevel =
-                      levelsPayload?.content?.find((l) => l.id === level.id) ??
-                      null;
-
-                    if (!fullLevel) return;
-                    setEditLevel(fullLevel);
+                    setEditUser({
+                      id: user.id,
+                      username: user.username,
+                      full_name: user.fullName,
+                      email: user.email,
+                      isActive: user.isActive,
+                      role: user.role,
+                    });
                     editModal.onOpen();
                   }}
                 >
@@ -152,19 +158,18 @@ export default function LevelTable() {
                   />
                 </Button>
               </Tooltip>
-              <Tooltip
-                content='Xóa'
-                delay={50}
-              >
+              <Tooltip content='Xóa'>
                 <Button
                   size='sm'
                   onPress={() => {
-                    const fullLevel =
-                      levelsPayload?.content?.find((l) => l.id === level.id) ??
-                      null;
-
-                    if (!fullLevel) return;
-                    setSelectedLevel(fullLevel);
+                    setSelectedUser({
+                      id: user.id,
+                      username: user.username,
+                      full_name: user.fullName,
+                      email: user.email,
+                      isActive: user.isActive,
+                      role: user.role,
+                    });
                     deleteModal.onOpen();
                   }}
                 >
@@ -176,9 +181,8 @@ export default function LevelTable() {
               </Tooltip>
             </div>
           );
-        case 'created_at':
-          return new Date(cellValue as string).toLocaleDateString();
-        case 'updated_at':
+        case 'createdAt':
+        case 'updatedAt':
           return new Date(cellValue as string).toLocaleDateString();
         default:
           return cellValue as string;
@@ -187,100 +191,72 @@ export default function LevelTable() {
     []
   );
 
-  // Modal thêm mới
+  // ---- Modal logic ----
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [newLevel, setNewLevel] = useState<Partial<LevelInterface>>({
-    name: '',
-    description: '',
-    points: 0,
-  });
-
   const viewModal = useDisclosure();
   const editModal = useDisclosure();
   const deleteModal = useDisclosure();
 
-  const [selectedLevel, setSelectedLevel] = useState<LevelPayload | null>(null);
-  const [editLevel, setEditLevel] = useState<LevelPayload | null>(null);
+  const [newUser, setNewUser] = useState<Partial<UserInterface>>({
+    username: '',
+    fullName: '',
+    email: '',
+    role: 'TEACHER',
+    isActive: true,
+  });
+  const [selectedUser, setSelectedUser] = useState<UserPayload | null>(null);
+  const [editUser, setEditUser] = useState<UserPayload | null>(null);
 
-  const handleInputChange = (field: string, value: string) => {
-    setNewLevel((prev) => ({ ...prev, [field]: value }));
-  };
+  // ---- Handlers ----
+  const handleInputChange = (field: string, value: string) =>
+    setNewUser((prev: any) => ({ ...prev, [field]: value }));
 
   const handleSubmit = async () => {
     try {
-      await createLevel.mutateAsync({
-        name: newLevel.name || '',
-        description: newLevel.description || '',
-        points: Number(newLevel.points) || 0,
-      });
+      await createUser.mutateAsync(newUser);
       setIsModalOpen(false);
-      setNewLevel({ name: '', description: '', points: 0 });
-      addToast({
-        title: 'Tạo độ khó thành công',
-        color: 'success',
-        timeout: 2000,
-      });
+      addToast({ title: 'Tạo người dùng thành công', color: 'success' });
     } catch {
-      addToast({
-        title: 'Tạo độ khó lỗi',
-        color: 'danger',
-        timeout: 2000,
-      });
+      addToast({ title: 'Lỗi khi tạo người dùng', color: 'danger' });
     }
   };
 
-  const handleEditChange = (field: keyof LevelPayload, value: string) => {
-    if (!editLevel) return;
-    setEditLevel({ ...editLevel, [field]: value });
+  const handleEditChange = <K extends keyof UserPayload>(
+    field: K,
+    value: UserPayload[K]
+  ) => {
+    if (!editUser) return;
+    setEditUser({ ...editUser, [field]: value });
   };
 
   const handleEditSubmit = async () => {
-    if (!editLevel) return;
+    if (!editUser) return;
     try {
-      await updateLevel.mutateAsync({ id: editLevel.id, payload: editLevel });
+      await updateUser.mutateAsync({ id: editUser.id, payload: editUser });
       editModal.onClose();
-      setEditLevel(null);
-      addToast({
-        title: 'Cập nhật độ khó thành công',
-        color: 'success',
-        timeout: 2000,
-      });
+      addToast({ title: 'Cập nhật thành công', color: 'success' });
     } catch {
-      addToast({
-        title: 'Cập nhật độ khó lỗi',
-        color: 'danger',
-        timeout: 2000,
-      });
+      addToast({ title: 'Cập nhật lỗi', color: 'danger' });
     }
   };
 
   const handleDelete = async () => {
-    if (!selectedLevel) return;
+    if (!selectedUser) return;
     try {
-      await deleteLevel.mutateAsync(selectedLevel.id);
+      await deleteUser.mutateAsync(selectedUser.id);
       deleteModal.onClose();
-      setSelectedLevel(null);
-      addToast({
-        title: 'Xóa độ khó thành công',
-        color: 'success',
-        timeout: 2000,
-      });
+      addToast({ title: 'Xóa thành công', color: 'success' });
     } catch {
-      addToast({
-        title: 'Xóa độ khó lỗi',
-        color: 'danger',
-        timeout: 2000,
-      });
+      addToast({ title: 'Xóa lỗi', color: 'danger' });
     }
   };
 
   const topContentProps = {
-    columns: levelColumns,
+    columns: userColumns,
     filterValue,
     statusFilter,
     statusOptions,
-    total: levels.length,
+    total: users.length,
     visibleColumns,
     onClear: () => {
       setFilterValue('');
@@ -301,7 +277,7 @@ export default function LevelTable() {
   const bottomContent = (
     <BottomContent
       page={page}
-      pages={levelsPayload?.totalPages ?? 1}
+      pages={usersPayload?.totalPages ?? 1}
       //   selectedKeys={selectedKeys}
       //   totalItems={usersPayload?.totalElements ?? 0}
       //   totalSelected={
@@ -310,7 +286,7 @@ export default function LevelTable() {
       //       : selectedKeys.size
       //   }
       onNextPage={() =>
-        page < (levelsPayload?.totalPages ?? 1) && setPage(page + 1)
+        page < (usersPayload?.totalPages ?? 1) && setPage(page + 1)
       }
       onPageChange={setPage}
       onPreviousPage={() => page > 1 && setPage(page - 1)}
@@ -320,20 +296,17 @@ export default function LevelTable() {
   if (isLoading) {
     return (
       <div className='flex items-center justify-center h-screen'>
-        <CircularProgress
-          className='text-lg'
-          title='Đang tải dữ liệu...'
-        />
+        <CircularProgress title='Đang tải dữ liệu...' />
       </div>
     );
   }
 
   return (
     <>
-      <GenericTable<LevelInterface>
+      <GenericTable<UserInterface>
         bottomContent={bottomContent}
-        columns={levelColumns}
-        data={levels}
+        columns={userColumns}
+        data={users}
         filterValue={filterValue}
         hasSearchFilter={hasSearchFilter}
         headerColumns={headerColumns}
@@ -360,12 +333,12 @@ export default function LevelTable() {
                 >
                   Thêm mới
                 </Button>
-                <LevelModal
+                <UserModal
                   handleInputChange={handleInputChange}
                   handleModalClose={() => setIsModalOpen(false)}
                   handleSubmit={handleSubmit}
                   isOpen={isModalOpen}
-                  newLevel={newLevel}
+                  newUser={newUser}
                   onOpenChange={setIsModalOpen}
                 />
               </>
@@ -375,31 +348,28 @@ export default function LevelTable() {
         visibleColumns={visibleColumns}
       />
 
-      {/* View Modal */}
-      {selectedLevel && (
-        <ViewLevelModal
+      {selectedUser && (
+        <ViewUserModal
           isOpen={viewModal.isOpen}
-          level={selectedLevel}
+          user={selectedUser}
           onOpenChange={viewModal.onOpenChange}
         />
       )}
 
-      {/* Edit Modal */}
-      {editLevel && (
-        <EditLevelModal
+      {editUser && (
+        <EditUserModal
           handleInputChange={handleEditChange}
           handleSubmit={handleEditSubmit}
           isOpen={editModal.isOpen}
-          level={editLevel}
+          user={editUser}
           onOpenChange={editModal.onOpenChange}
         />
       )}
 
-      {/* Delete Modal */}
-      {selectedLevel && (
-        <DeleteLevelModal
+      {selectedUser && (
+        <DeleteUserModal
           isOpen={deleteModal.isOpen}
-          levelName={selectedLevel.name}
+          userName={selectedUser.username}
           onDelete={handleDelete}
           onOpenChange={deleteModal.onOpenChange}
         />

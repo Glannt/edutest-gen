@@ -1,7 +1,28 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query';
 
 import { levelService } from '@/service/level.service';
 import { LevelPayload } from '@/types/level';
+import { PageResponse } from '@/types/page.response';
+
+/**
+ * Hook: Lấy danh sách người dùng (phân trang + sort)
+ */
+export const usePagedLevels = (params?: {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  direction?: 'asc' | 'desc';
+}) =>
+  useQuery<PageResponse<LevelPayload>>({
+    queryKey: ['levels', params],
+    queryFn: () => levelService.getPaged(params),
+    placeholderData: keepPreviousData,
+  });
 
 /**
  * Lấy danh sách tất cả Level

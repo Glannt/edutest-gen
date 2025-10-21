@@ -25,27 +25,6 @@ import { useAuthStore } from '@/store/auth.store';
 import { siteConfig } from '@/config/site';
 import { useUserContext } from '@/components/settings/user/user-context';
 
-// Define navigation items
-// const navItems = [
-//   { name: 'Dashboard', path: '/dashboard', icon: 'lucide:layout-dashboard' },
-//   { name: 'Độ khó', path: '/dashboard/level', icon: 'lucide:user' },
-//   { name: 'Môn học', path: '/dashboard/subject', icon: 'lucide:user' },
-//   {
-//     name: 'Loại câu hỏi',
-//     path: '/dashboard/question-type',
-//     icon: 'lucide:user',
-//   },
-//   { name: 'Lớp', path: '/grade', icon: 'lucide:user' },
-//   { name: 'Bài học', path: '/lesson', icon: 'lucide:user' },
-//   { name: 'Ma trận', path: '/dashboard/matrix', icon: 'lucide:user' },
-//   { name: 'Bài học', path: '/dashboard/lesson', icon: 'lucide:user' },
-//   { name: 'Nội dung', path: '/dashboard/content', icon: 'lucide:user' },
-//   { name: 'Câu hỏi', path: '/question', icon: 'lucide:user' },
-//   { name: 'Bài thi', path: '/exam', icon: 'lucide:user' },
-//   { name: 'Settings', path: '/settings', icon: 'lucide:settings' },
-//   { name: 'Analytics', path: '/analytics', icon: 'lucide:bar-chart' },
-// ];
-
 export default function SidebarLayout() {
   const { logout } = useUserContext();
   const location = useLocation();

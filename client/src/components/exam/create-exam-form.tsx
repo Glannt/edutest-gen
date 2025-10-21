@@ -1,22 +1,28 @@
-import React, { useState } from 'react';
-import { Button, Input, Checkbox, Form, addToast } from '@heroui/react';
-import { Icon } from '@iconify/react';
+import React from 'react';
+import { Input, Checkbox, Form, addToast } from '@heroui/react';
 
 import { useCreateExam } from '@/hooks/useExam'; // hook bạn cung cấp
 import { CreateExamRequest, ExamQuestionRequest } from '@/types/exam';
 import { MatrixSelector } from '@/components/exam/matrix-selector';
 import { ExamDateRangePicker } from '@/components/exam/exam-date-range-picker';
 import { QuestionSelector } from '@/components/exam/question-selector';
+interface CreateExamFormProps {
+  formData: CreateExamRequest;
+  setFormData: React.Dispatch<React.SetStateAction<CreateExamRequest>>;
+}
 
-export const CreateExamForm: React.FC = () => {
+export const CreateExamForm: React.FC<CreateExamFormProps> = ({
+  formData,
+  setFormData,
+}) => {
   const createExamMutation = useCreateExam();
 
-  const [formData, setFormData] = useState<CreateExamRequest>({
-    name: '',
-    matrixId: 0,
-    shuffleQuestions: false,
-    questions: [],
-  });
+  // const [formData, setFormData] = useState<CreateExamRequest>({
+  //   name: '',
+  //   matrixId: 0,
+  //   shuffleQuestions: false,
+  //   questions: [],
+  // });
 
   const handleInputChange = (field: keyof CreateExamRequest, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -106,7 +112,7 @@ export const CreateExamForm: React.FC = () => {
         onQuestionsChange={handleQuestionsChange}
       />
 
-      <div className='flex justify-end gap-2'>
+      {/* <div className='flex justify-end gap-2'>
         <Button
           color='default'
           type='button'
@@ -121,9 +127,9 @@ export const CreateExamForm: React.FC = () => {
           }
         >
           Hủy
-        </Button>
+        </Button> */}
 
-        <Button
+      {/* <Button
           color='primary'
           isLoading={createExamMutation.isPending}
           startContent={
@@ -132,8 +138,8 @@ export const CreateExamForm: React.FC = () => {
           type='submit'
         >
           Tạo đề thi
-        </Button>
-      </div>
+        </Button> */}
+      {/* </div> */}
     </Form>
   );
 };

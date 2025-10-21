@@ -10,5 +10,6 @@ export interface AuthResponseData {
   full_name?: string;
   email?: string;
   role?: string;
+  isActive?: boolean;
   user?: any;
 }
