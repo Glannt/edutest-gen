@@ -1,3 +1,5 @@
+import { ContentBlockPayload } from '@/types/question';
+
 // src/types/exam.ts
 export interface ExamQuestionRequest {
   questionId: number;
@@ -39,7 +41,7 @@ export interface AutoGenerateExamListRequest {
 
 export interface OptionDto {
   id: number;
-  content: string;
+  content: ContentBlockPayload[];
   isCorrect?: boolean;
 }
 

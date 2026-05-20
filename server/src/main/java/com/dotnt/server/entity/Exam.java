@@ -1,5 +1,7 @@
 package com.dotnt.server.entity;
 
+import com.dotnt.server.converter.ExamQuestionSnapshotConverter;
+import com.dotnt.server.dto.ExamQuestionSnapshotDto;
 import com.dotnt.server.enums.ExamStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -43,7 +46,9 @@ public class Exam extends BaseEntity {
     @Builder.Default
     private ExamStatus status = ExamStatus.DRAFT;
 
-
+    @Convert(converter = ExamQuestionSnapshotConverter.class)
+    @Column(name = "questions_json", columnDefinition = "JSON")
+    private List<ExamQuestionSnapshotDto> questionsJson;
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

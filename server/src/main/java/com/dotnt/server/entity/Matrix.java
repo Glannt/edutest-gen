@@ -33,6 +33,11 @@ public class Matrix extends BaseEntity {
     @Builder.Default
     private Integer totalQuestions = 0;
 
+    @Column(name = "total_score", nullable = false)
+    @Builder.Default
+    private Double totalScore = 10.0;
+
+
 
     @OneToMany(mappedBy = "matrix", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

@@ -1,27 +1,18 @@
 import React from 'react';
-import {
-  Button,
-  Card,
-  Tabs,
-  Tab,
-  useDisclosure,
-  addToast,
-} from '@heroui/react';
+import { Card, Tabs, Tab, addToast } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
-import { useUserContext } from '@/components/settings/user/user-context';
-import { ProfileSettings } from '@/components/settings/user/profile-settings';
+import { ProfilePage } from '@/components/settings/user/profile-settings';
 import { AccountSettings } from '@/components/settings/user/account-settings';
 import { NotificationSettings } from '@/components/settings/user/notification-settings';
 import { PrivacySettings } from '@/components/settings/user/privacy-settings';
 import { AppearanceSettings } from '@/components/settings/user/appearance-settings';
-import { DeleteAccountModal } from '@/components/settings/user/common/delete-account-modal';
 
 export function UserSettingsPage() {
   const [selected, setSelected] = React.useState('profile');
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const { auth, handleInputChange, handleNestedChange, handleDeleteAccount } =
-    useUserContext(); // Lấy trực tiếp từ context
+  // const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // const { auth, handleInputChange, handleNestedChange, handleDeleteAccount } =
+  //   useUserContext(); // Lấy trực tiếp từ context
 
   const handleSaveChanges = () => {
     addToast({
@@ -36,12 +27,12 @@ export function UserSettingsPage() {
       <div className='flex flex-col gap-6'>
         <div className='flex items-center justify-between'>
           <h1 className='text-2xl font-semibold'>Account Settings</h1>
-          <Button
+          {/* <Button
             color='primary'
             onPress={handleSaveChanges}
           >
             Save Changes
-          </Button>
+          </Button> */}
         </div>
 
         <Card className='p-0'>
@@ -62,11 +53,11 @@ export function UserSettingsPage() {
                     icon='lucide:user'
                     width={18}
                   />
-                  <span>Profile</span>
+                  <span>Thông tin cá nhân</span>
                 </div>
               }
             >
-              <ProfileSettings />
+              <ProfilePage />
             </Tab>
 
             <Tab
@@ -77,7 +68,7 @@ export function UserSettingsPage() {
                     icon='lucide:settings'
                     width={18}
                   />
-                  <span>Account</span>
+                  <span>Tài khoản</span>
                 </div>
               }
             >
@@ -132,11 +123,11 @@ export function UserSettingsPage() {
         </Card>
       </div>
 
-      <DeleteAccountModal
+      {/* <DeleteAccountModal
         isOpen={isOpen}
         onDelete={handleDeleteAccount}
         onOpenChange={onOpenChange}
-      />
+      /> */}
     </div>
   );
 }

@@ -4,7 +4,10 @@ import com.dotnt.server.annotation.RestResponse;
 import com.dotnt.server.config.JwtTokenProvider;
 import com.dotnt.server.dto.request.LoginRequest;
 import com.dotnt.server.dto.request.RegisterRequest;
+import com.dotnt.server.dto.request.UpdatePasswordRequest;
+import com.dotnt.server.dto.request.UpdateProfileRequest;
 import com.dotnt.server.dto.response.LoginResponse;
+import com.dotnt.server.dto.response.UserResponse;
 import com.dotnt.server.entity.CustomUserDetails;
 import com.dotnt.server.entity.User;
 import com.dotnt.server.service.UserService;
@@ -40,31 +43,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest loginRequest) {
-        // Authenticate user
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Generate JWT
-        String token = jwtTokenProvider.generateToken(authentication);
-
-        // Get user info
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-
-        User user = userService.findByUsernameOrEmail(userDetails.getUsername());
-
-        return LoginResponse.builder()
-                .token(token)
-                .userId(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .role(userDetails.getRole())
-                .build();
+        return userService.login(loginRequest);
     }
 
     // GET /api/auth/me
@@ -116,5 +95,29 @@ public class AuthController {
                 .username(newUser.getUsername())
                 .role(userDetails.getRole())
                 .build();
+    }
+
+    // 🆕 Cập nhật hồ sơ
+    @PutMapping("/profile")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse updateProfile(@RequestBody UpdateProfileRequest request) {
+        Long currentUserId = getCurrentUserId();
+        return userService.updateProfile(currentUserId, request);
+    }
+
+    @PutMapping("/password")
+    @ResponseStatus(HttpStatus.OK)
+    public void updatePassword(@RequestBody UpdatePasswordRequest request) {
+        Long currentUserId = getCurrentUserId();
+        userService.updatePassword(currentUserId, request);
+    }
+
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getId();
     }
 }

@@ -22,6 +22,7 @@ public class Option extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private Question question;
 
     @Convert(converter = ContentBlockConverter.class)

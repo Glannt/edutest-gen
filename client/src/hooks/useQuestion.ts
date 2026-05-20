@@ -7,6 +7,7 @@ import {
 
 import { questionService } from '@/service/question.service';
 import { QuestionPayload } from '@/types/question';
+import { VietjackRequest } from '@/interface/ai.request.interface';
 
 /**
  * Lấy danh sách tất cả Question
@@ -101,4 +102,14 @@ export const useQuestionsByMatrix = (lessonIds: number[] = []) => {
   const data = queries.flatMap((q) => q.data ?? []);
 
   return { data, isLoading };
+};
+
+export const useQuestionsFromN8n = (filters: VietjackRequest) => {
+  return useQuery<QuestionPayload[]>({
+    queryKey: ['questions', 'n8n', filters],
+    queryFn: () => questionService.searchN8n(filters),
+    // enabled: Object.values(filters).some((v) => !!v), // chỉ fetch khi có ít nhất 1 filter
+    enabled: false, // ❌ Không auto gọi khi filters thay đổi
+    retry: false,
+  });
 };

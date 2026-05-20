@@ -20,3 +20,12 @@ export type UserPayload = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+export interface UpdateProfileRequest {
+  fullName: string;
+}
+
+export interface UpdatePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}

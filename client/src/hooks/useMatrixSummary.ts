@@ -4,6 +4,7 @@ import { useMatrixStore } from '@/store/matrix.store';
 
 export const useMatrixSummary = () => {
   const structures = useMatrixStore((s) => s.structures);
+  const matrixInfo = useMatrixStore((s) => s.matrixInfo);
 
   return useMemo(() => {
     const totalsBySubjectId: Record<number, number> = {};
@@ -11,6 +12,7 @@ export const useMatrixSummary = () => {
     const totalsByLevelQuestionType: Record<string, number> = {};
     const totalsByQuestionType: Record<number, number> = {};
     let totalQuestions = 0;
+    let totalScore = 0;
 
     structures.forEach((it) => {
       const count = Number(it.questionCount) || 0;
@@ -57,6 +59,7 @@ export const useMatrixSummary = () => {
       uniqueLevelQuestionPairs,
       totalsByQuestionType,
       structures,
+      totalScore: matrixInfo?.totalScore || 0,
     };
-  }, [structures]);
+  }, [structures, matrixInfo]);
 };

@@ -43,6 +43,10 @@ spring:
       enabled: true
       max-file-size: 10MB
       max-request-size: 15MB
+  data:
+    mongodb:
+      uri: mongodb://glannt:Glannt_0904@localhost:27019/edutest-gen?authSource=admin
+
 
 server:
   port: ${SERVER_PORT:8080}

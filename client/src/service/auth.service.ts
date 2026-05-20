@@ -1,7 +1,11 @@
 import http from '@/libs/http';
 import { ApiResponse } from '@/types/api.response';
 import { AuthResponseData, LoginPayload } from '@/types/auth';
-import { User } from '@/types/user';
+import {
+  UpdatePasswordRequest,
+  UpdateProfileRequest,
+  User,
+} from '@/types/user';
 
 export interface RegisterPayload {
   full_name: string;
@@ -67,6 +71,20 @@ export const authService = {
   },
   logout: async (): Promise<ApiResponse<any>> => {
     const res = await http.post('/auth/logout');
+
+    return res.data;
+  },
+  updateProfile: async (
+    data: UpdateProfileRequest
+  ): Promise<ApiResponse<User>> => {
+    const res = await http.put('/auth/profile', data);
+
+    return res.data;
+  },
+  updatePassword: async (
+    data: UpdatePasswordRequest
+  ): Promise<ApiResponse<void>> => {
+    const res = await http.put('/auth/password', data);
 
     return res.data;
   },

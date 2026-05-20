@@ -21,6 +21,7 @@ interface MatrixInfo {
   name: string;
   description?: string;
   totalQuestions: number;
+  totalScore: number;
 }
 
 interface MatrixState {
@@ -75,6 +76,7 @@ export const useMatrixStore = create<MatrixState>()(
           name: matrixInfo.name,
           description: matrixInfo.description,
           totalQuestions: matrixInfo.totalQuestions,
+          totalScore: matrixInfo.totalScore,
           matrixDetails: structures.map((s) => ({
             lessonId: s.lessonId,
             levelId: s.levelId,

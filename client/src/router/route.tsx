@@ -22,6 +22,7 @@ import MatrixLayout from '@/layouts/matrix-layout';
 import { UserSettingsPage } from '@/pages/setting';
 import GradePage from '@/pages/grade';
 import UserPage from '@/pages/user';
+import { QuestionSearchPage } from '@/pages/search-question';
 
 export function AppRoutes() {
   return (
@@ -83,7 +84,10 @@ export function AppRoutes() {
           element={<ExamPage />}
           path='exam'
         />
-
+        <Route
+          element={<QuestionSearchPage />}
+          path='question-bank'
+        />
         <Route
           element={<LessonPage />}
           path='lesson'

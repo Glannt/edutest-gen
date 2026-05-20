@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -26,18 +27,21 @@ public class QuestionTypeController {
 
     @GetMapping
     @Operation(summary = "Get all question types")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public List<QuestionTypeDto> getAllQuestionTypes() {
         return questionTypeService.findAll();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get question type by ID")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public QuestionTypeDto getQuestionTypeById(@PathVariable Long id) {
         return questionTypeService.findById(id)
                 .orElseThrow(() -> new RuntimeException("QuestionType not found with id " + id));
     }
 
     @GetMapping("paged")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public Page<QuestionTypeDto> findAllPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -55,6 +59,7 @@ public class QuestionTypeController {
     @PostMapping
     @Operation(summary = "Create new question type")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public QuestionTypeDto createQuestionType(@RequestBody QuestionTypeDto dto) {
         QuestionTypeDto saved = questionTypeService.save(dto);
 
@@ -72,6 +77,7 @@ public class QuestionTypeController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update question type")
+    @PreAuthorize("hasRole('ADMIN')")
     public QuestionTypeDto updateQuestionType(@PathVariable Long id, @RequestBody QuestionTypeDto dto) {
         return questionTypeService.update(id, dto);
     }
@@ -79,8 +85,8 @@ public class QuestionTypeController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete question type")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public String deleteQuestionType(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteQuestionType(@PathVariable Long id) {
         questionTypeService.deleteById(id);
-        return "QuestionType deleted successfully";
     }
 }

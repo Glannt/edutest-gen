@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class UserController {
 
     @GetMapping
     @PagingResponse
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public Page<UserResponse> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -42,18 +44,21 @@ public class UserController {
 
     // 🔹 Lấy chi tiết 1 người dùng
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public UserResponse getUserById(@PathVariable Long id) {
         return userService.findById(id);
     }
 
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse save(@RequestBody UserDto user) {
         return userService.save(user);
     }
 
     // 🔹 Cập nhật người dùng
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public UserResponse updateUser(
             @PathVariable Long id,
             @RequestBody UserDto user
@@ -63,6 +68,7 @@ public class UserController {
     }
 
     // 🔹 Xóa người dùng
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         userService.deleteById(id);

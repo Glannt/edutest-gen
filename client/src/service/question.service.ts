@@ -1,3 +1,4 @@
+import { VietjackRequest } from '@/interface/ai.request.interface';
 import http from '@/libs/http';
 import { ApiResponse } from '@/types/api.response';
 import { QuestionPayload } from '@/types/question';
@@ -48,5 +49,16 @@ export const questionService = {
 
   async delete(id: number): Promise<void> {
     await http.delete(`/questions/${id}`);
+  },
+
+  async searchN8n(params: VietjackRequest) {
+    const res = await http.get<ApiResponse<QuestionPayload[]>>(
+      '/questions/n8n',
+      {
+        params,
+      }
+    );
+
+    return res.data.data; // Giả định ApiResponse có { data, message, status }
   },
 };

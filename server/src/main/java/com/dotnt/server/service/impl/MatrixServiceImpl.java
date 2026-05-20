@@ -89,7 +89,7 @@ public class MatrixServiceImpl implements MatrixService {
             existing.setUser(user);
         }
 
-        // ✅ Xóa toàn bộ detail cũ trên cùng danh sách
+        // Xóa toàn bộ detail cũ trên cùng danh sách
         existing.getMatrixDetails().clear();
 
         if (request.getMatrixDetails() != null && !request.getMatrixDetails().isEmpty()) {
@@ -122,101 +122,6 @@ public class MatrixServiceImpl implements MatrixService {
      * Export 1 ma trận -> Excel
      */
     @Override
-//    public ByteArrayInputStream exportMatrixToExcel(Long matrixId) throws IOException {
-//        Matrix matrix = matrixRepository.findById(matrixId)
-//                .orElseThrow(() -> new RuntimeException("Matrix not found: " + matrixId));
-//
-//        try (Workbook workbook = new XSSFWorkbook()) {
-//            Sheet sheet = workbook.createSheet(matrix.getName());
-//
-//            // ==== STYLE SETUP ====
-//            CellStyle headerStyle = workbook.createCellStyle();
-//            Font headerFont = workbook.createFont();
-//            headerFont.setBold(true);
-//            headerFont.setFontHeightInPoints((short) 11);
-//            headerStyle.setFont(headerFont);
-//            headerStyle.setAlignment(HorizontalAlignment.CENTER);
-//            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-//            headerStyle.setBorderTop(BorderStyle.THIN);
-//            headerStyle.setBorderBottom(BorderStyle.THIN);
-//            headerStyle.setBorderLeft(BorderStyle.THIN);
-//            headerStyle.setBorderRight(BorderStyle.THIN);
-//
-//            CellStyle cellStyle = workbook.createCellStyle();
-//            cellStyle.setAlignment(HorizontalAlignment.CENTER);
-//            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-//            cellStyle.setBorderTop(BorderStyle.THIN);
-//            cellStyle.setBorderBottom(BorderStyle.THIN);
-//            cellStyle.setBorderLeft(BorderStyle.THIN);
-//            cellStyle.setBorderRight(BorderStyle.THIN);
-//
-//            int rowIdx = 0;
-//
-//            // ==== TIÊU ĐỀ CHÍNH ====
-//            Row titleRow = sheet.createRow(rowIdx++);
-//            Cell titleCell = titleRow.createCell(0);
-//            titleCell.setCellValue("Ma trận đề thi: " + matrix.getName());
-//            titleCell.setCellStyle(headerStyle);
-//            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
-//
-//            rowIdx++; // dòng trống
-//
-//            // ==== HEADER ====
-//            Row header = sheet.createRow(rowIdx++);
-//            String[] headers = {"Chương", "Chủ đề", "Cấp độ tư duy - Biết", "Hiểu", "VD", "Tổng", "Tỉ lệ (%)"};
-//            for (int i = 0; i < headers.length; i++) {
-//                Cell cell = header.createCell(i);
-//                cell.setCellValue(headers[i]);
-//                cell.setCellStyle(headerStyle);
-//            }
-//
-//            // ==== DỮ LIỆU CHI TIẾT ====
-//            double totalPercent = 0;
-//            int totalQuestion = 0;
-//
-//            for (MatrixDetail detail : matrix.getMatrixDetails()) {
-//                Row row = sheet.createRow(rowIdx++);
-//
-//                String lessonName = detail.getLesson() != null ? detail.getLesson().getName() : "-";
-//                String chapterName = detail.getLesson()
-//                        != null ? detail.getLesson().getChapter().getName() : "-";
-//                String levelName = detail.getLevel() != null ? detail.getLevel().getName() : "-";
-//                Integer qCount = detail.getQuestionCount() != null ? detail.getQuestionCount() : 0;
-//                Double percent = detail.getPercent() != null ? detail.getPercent() : 0.0;
-//
-//                row.createCell(0).setCellValue(chapterName);
-//                row.createCell(1).setCellValue(lessonName);
-//                row.createCell(2).setCellValue(levelName.contains("Biết") ? qCount : 0);
-//                row.createCell(3).setCellValue(levelName.contains("Hiểu") ? qCount : 0);
-//                row.createCell(4).setCellValue(levelName.contains("VD") ? qCount : 0);
-//                row.createCell(5).setCellValue(qCount);
-//                row.createCell(6).setCellValue(percent);
-//
-//                for (int i = 0; i <= 6; i++) row.getCell(i).setCellStyle(cellStyle);
-//
-//                totalQuestion += qCount;
-//                totalPercent += percent;
-//            }
-//
-//            // ==== DÒNG TỔNG ====
-//            Row totalRow = sheet.createRow(rowIdx++);
-//            Cell totalLabel = totalRow.createCell(1);
-//            totalLabel.setCellValue("Tổng");
-//            totalLabel.setCellStyle(headerStyle);
-//            totalRow.createCell(5).setCellValue(totalQuestion);
-//            totalRow.createCell(6).setCellValue(totalPercent);
-//            for (int i = 0; i <= 6; i++) {
-//                if (totalRow.getCell(i) == null) totalRow.createCell(i);
-//                totalRow.getCell(i).setCellStyle(headerStyle);
-//            }
-//
-//            for (int i = 0; i <= 6; i++) sheet.autoSizeColumn(i);
-//
-//            ByteArrayOutputStream out = new ByteArrayOutputStream();
-//            workbook.write(out);
-//            return new ByteArrayInputStream(out.toByteArray());
-//        }
-//    }
     public ByteArrayInputStream exportMatrixToExcel(Long matrixId) throws IOException {
         Matrix matrix = matrixRepository.findById(matrixId)
                 .orElseThrow(() -> new RuntimeException("Matrix not found: " + matrixId));

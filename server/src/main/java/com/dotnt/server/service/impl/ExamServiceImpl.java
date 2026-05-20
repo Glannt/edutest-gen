@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dotnt.server.dto.ExamQuestionSnapshotDto;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,7 @@ public class ExamServiceImpl implements ExamService {
         }
 
         Set<ExamQuestion> examQuestions = new HashSet<>();
+        List<ExamQuestionSnapshotDto> snapshots = new ArrayList<>();
         for (ExamQuestionRequest qReq : questions) {
             Question question = questionRepository.findById(qReq.getQuestionId())
                     .orElseThrow(() -> new RuntimeException("Question not found"));
@@ -65,9 +67,27 @@ public class ExamServiceImpl implements ExamService {
                     .finalPoints(points)
                     .build();
             examQuestions.add(examQuestion);
+
+            List<OptionDto> optionDtos = question.getOptions() == null ? List.of() : question.getOptions().stream()
+                    .map(opt -> OptionDto.builder()
+                            .id(opt.getId())
+                            .content(opt.getContentJson())
+                            .isCorrect(opt.getIsCorrect())
+                            .orderIndex(opt.getOrderIndex())
+                            .build())
+                    .collect(Collectors.toList());
+
+            snapshots.add(ExamQuestionSnapshotDto.builder()
+                    .questionId(question.getId())
+                    .contentJson(question.getContentJson())
+                    .explanationJson(question.getExplanationJson())
+                    .finalPoints(points)
+                    .options(optionDtos)
+                    .build());
         }
 
         exam.setExamQuestions(examQuestions);
+        exam.setQuestionsJson(snapshots);
         examRepository.save(exam);
 
         return mapToResponse(exam);
@@ -99,6 +119,8 @@ public class ExamServiceImpl implements ExamService {
             Collections.shuffle(questions);
         }
 
+        Set<ExamQuestion> examQuestions = new HashSet<>();
+        List<ExamQuestionSnapshotDto> snapshots = new ArrayList<>();
         for (ExamQuestionRequest qReq : questions) {
             Question question = questionRepository.findById(qReq.getQuestionId())
                     .orElseThrow(() -> new RuntimeException("Question not found"));
@@ -110,9 +132,28 @@ public class ExamServiceImpl implements ExamService {
                     .question(question)
                     .finalPoints(points)
                     .build();
-            exam.getExamQuestions().add(examQuestion);
+            examQuestions.add(examQuestion);
+
+            List<OptionDto> optionDtos = question.getOptions() == null ? List.of() : question.getOptions().stream()
+                    .map(opt -> OptionDto.builder()
+                            .id(opt.getId())
+                            .content(opt.getContentJson())
+                            .isCorrect(opt.getIsCorrect())
+                            .orderIndex(opt.getOrderIndex())
+                            .build())
+                    .collect(Collectors.toList());
+
+            snapshots.add(ExamQuestionSnapshotDto.builder()
+                    .questionId(question.getId())
+                    .contentJson(question.getContentJson())
+                    .explanationJson(question.getExplanationJson())
+                    .finalPoints(points)
+                    .options(optionDtos)
+                    .build());
         }
 
+        exam.setExamQuestions(examQuestions);
+        exam.setQuestionsJson(snapshots);
         examRepository.save(exam);
         return mapToResponse(exam);
     }
@@ -127,27 +168,9 @@ public class ExamServiceImpl implements ExamService {
     @Override
     public Page<ExamResponse> getPaged(Pageable pageable) {
         return examRepository.findAll(pageable)
-                .map(exam -> {
-                    List<ExamQuestionResponse> questionResponses = exam.getExamQuestions().stream()
-                            .map(eq -> ExamQuestionResponse.builder()
-                                    .questionId(eq.getQuestion().getId())
-                                    .content(buildContentText(eq.getQuestion()))
-                                    .finalPoints(eq.getFinalPoints() != null
-                                            ? eq.getFinalPoints()
-                                            : eq.getQuestion().getLevel().getPoints())
-                                    .build())
-                            .collect(Collectors.toList());
-
-                    return ExamResponse.builder()
-                            .id(exam.getId())
-                            .code(exam.getCode())
-                            .name(exam.getName())
-                            .startTime(exam.getStartTime())
-                            .endTime(exam.getEndTime())
-                            .questions(questionResponses)
-                            .build();
-                });
+                .map(this::mapToResponse);
     }
+
 
     @Override
     @Transactional
@@ -183,6 +206,7 @@ public class ExamServiceImpl implements ExamService {
                 .build();
 
         Set<ExamQuestion> examQuestions = new HashSet<>();
+        List<ExamQuestionSnapshotDto> snapshots = new ArrayList<>();
         for (Question q : selectedQuestions) {
             ExamQuestion eq = ExamQuestion.builder()
                     .exam(exam)
@@ -190,8 +214,26 @@ public class ExamServiceImpl implements ExamService {
                     .finalPoints(q.getLevel().getPoints())
                     .build();
             examQuestions.add(eq);
+
+            List<OptionDto> optionDtos = q.getOptions() == null ? List.of() : q.getOptions().stream()
+                    .map(opt -> OptionDto.builder()
+                            .id(opt.getId())
+                            .content(opt.getContentJson())
+                            .isCorrect(opt.getIsCorrect())
+                            .orderIndex(opt.getOrderIndex())
+                            .build())
+                    .collect(Collectors.toList());
+
+            snapshots.add(ExamQuestionSnapshotDto.builder()
+                    .questionId(q.getId())
+                    .contentJson(q.getContentJson())
+                    .explanationJson(q.getExplanationJson())
+                    .finalPoints(q.getLevel().getPoints())
+                    .options(optionDtos)
+                    .build());
         }
         exam.setExamQuestions(examQuestions);
+        exam.setQuestionsJson(snapshots);
 
         examRepository.save(exam);
 
@@ -236,33 +278,51 @@ public class ExamServiceImpl implements ExamService {
 
 
     private ExamResponse mapToResponseWithOptions(Exam exam, boolean shuffleOptions) {
-        List<ExamQuestionResponse> questionResponses = exam.getExamQuestions().stream()
-                .map(eq -> {
-                    Question q = eq.getQuestion();
+        List<ExamQuestionResponse> questionResponses;
+        if (exam.getQuestionsJson() != null && !exam.getQuestionsJson().isEmpty()) {
+            questionResponses = exam.getQuestionsJson().stream()
+                    .map(snapshot -> {
+                        List<OptionDto> options = snapshot.getOptions() == null ? new ArrayList<>() : new ArrayList<>(snapshot.getOptions());
+                        if (shuffleOptions) {
+                            Collections.shuffle(options);
+                        }
+                        return ExamQuestionResponse.builder()
+                                .questionId(snapshot.getQuestionId())
+                                .finalPoints(snapshot.getFinalPoints())
+                                .content(buildContentTextFromBlocks(snapshot.getContentJson()))
+                                .options(options)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+        } else {
+            questionResponses = exam.getExamQuestions().stream()
+                    .map(eq -> {
+                        Question q = eq.getQuestion();
+                        if (q == null) return null;
+                        List<Option> options = new ArrayList<>(q.getOptions());
+                        if (shuffleOptions) {
+                            Collections.shuffle(options);
+                        }
 
-                    // Copy danh sách options và shuffle nếu cần
-                    List<Option> options = new ArrayList<>(q.getOptions());
-                    if (shuffleOptions) {
-                        Collections.shuffle(options);
-                    }
+                        List<OptionDto> optionDtos = options.stream()
+                                .map(opt -> OptionDto.builder()
+                                        .id(opt.getId())
+                                        .content(opt.getContentJson())
+                                        .isCorrect(opt.getIsCorrect())
+                                        .orderIndex(opt.getOrderIndex())
+                                        .build())
+                                .collect(Collectors.toList());
 
-                    List<OptionDto> optionDtos = options.stream()
-                            .map(opt -> OptionDto.builder()
-                                    .id(opt.getId())
-                                    .content(opt.getContentJson())
-                                    .isCorrect(opt.getIsCorrect())
-                                    .orderIndex(opt.getOrderIndex())
-                                    .build())
-                            .collect(Collectors.toList());
-
-                    return ExamQuestionResponse.builder()
-                            .questionId(q.getId())
-                            .content(buildContentText(q))  // sửa ở đây
-                            .finalPoints(eq.getFinalPoints() != null ? eq.getFinalPoints() : q.getLevel().getPoints())
-                            .options(optionDtos)
-                            .build();
-                })
-                .collect(Collectors.toList());
+                        return ExamQuestionResponse.builder()
+                                .questionId(q.getId())
+                                .content(buildContentText(q))
+                                .finalPoints(eq.getFinalPoints() != null ? eq.getFinalPoints() : (q.getLevel() != null ? q.getLevel().getPoints() : 0.0))
+                                .options(optionDtos)
+                                .build();
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }
 
         return ExamResponse.builder()
                 .code(exam.getCode())
@@ -273,16 +333,41 @@ public class ExamServiceImpl implements ExamService {
                 .build();
     }
 
-
-
     private ExamResponse mapToResponse(Exam exam) {
-        List<ExamQuestionResponse> questionResponses = exam.getExamQuestions().stream()
-                .map(eq -> ExamQuestionResponse.builder()
-                        .questionId(eq.getQuestion().getId())
-                        .finalPoints(eq.getQuestion().getLevel().getPoints())
-                        .content(buildContentText(eq.getQuestion())) // sửa ở đây
-                        .build())
-                .collect(Collectors.toList());
+        List<ExamQuestionResponse> questionResponses;
+        if (exam.getQuestionsJson() != null && !exam.getQuestionsJson().isEmpty()) {
+            questionResponses = exam.getQuestionsJson().stream()
+                    .map(snapshot -> ExamQuestionResponse.builder()
+                            .questionId(snapshot.getQuestionId())
+                            .finalPoints(snapshot.getFinalPoints())
+                            .content(buildContentTextFromBlocks(snapshot.getContentJson()))
+                            .options(snapshot.getOptions())
+                            .build())
+                    .collect(Collectors.toList());
+        } else {
+            // Fallback for older data that doesn't have questionsJson yet
+            questionResponses = exam.getExamQuestions().stream()
+                    .map(eq -> {
+                        Question q = eq.getQuestion();
+                        if (q == null) return null;
+                        List<OptionDto> optionDtos = q.getOptions() == null ? List.of() : q.getOptions().stream()
+                                .map(opt -> OptionDto.builder()
+                                        .id(opt.getId())
+                                        .content(opt.getContentJson())
+                                        .isCorrect(opt.getIsCorrect())
+                                        .orderIndex(opt.getOrderIndex())
+                                        .build())
+                                .collect(Collectors.toList());
+                        return ExamQuestionResponse.builder()
+                                .questionId(q.getId())
+                                .finalPoints(eq.getFinalPoints() != null ? eq.getFinalPoints() : (q.getLevel() != null ? q.getLevel().getPoints() : 0.0))
+                                .content(buildContentText(q))
+                                .options(optionDtos)
+                                .build();
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }
 
         return ExamResponse.builder()
                 .id(exam.getId())
@@ -313,6 +398,20 @@ public class ExamServiceImpl implements ExamService {
 
         StringBuilder sb = new StringBuilder();
         for (ContentBlockDto block : question.getExplanationJson()) {
+            if ("text".equals(block.getType())) {
+                sb.append(block.getValue());
+            } else if ("formula".equals(block.getType())) {
+                sb.append(" [").append(block.getLatex()).append("] ");
+            }
+        }
+        return sb.toString();
+    }
+
+    private String buildContentTextFromBlocks(List<ContentBlockDto> blocks) {
+        if (blocks == null || blocks.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (ContentBlockDto block : blocks) {
             if ("text".equals(block.getType())) {
                 sb.append(block.getValue());
             } else if ("formula".equals(block.getType())) {

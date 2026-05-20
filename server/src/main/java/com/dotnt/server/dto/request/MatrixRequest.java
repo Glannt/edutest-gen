@@ -15,6 +15,7 @@ public class MatrixRequest {
     private String name;
     private String description;
     private Integer totalQuestions;
+    private Double totalScore;
     private List<MatrixDetailRequest> matrixDetails;
     private Long userId;
 }
